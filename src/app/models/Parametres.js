@@ -17,7 +17,7 @@ const ParametresSchema = new mongoose.Schema({
 ParametresSchema.statics.getSettings = async function() {
   let settings = await this.findOne();
   if (!settings) {
-    settings = await this.create({ nom_complet: 'Votre Nom' });
+    settings = await this.create({ nom_complet: 'Miaoui Mohamed' });
   }
   return settings;
 };
