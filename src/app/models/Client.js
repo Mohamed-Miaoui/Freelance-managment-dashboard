@@ -2,8 +2,8 @@ import mongoose from 'mongoose';
 
 const ClientSchema = new mongoose.Schema({
   nom: { type: String, required: true },
-  email: { type: String },
-  telephone: { type: String },
+  email: { type: String, required: true },
+  telephone: { type: String, required: true },
   adresse: { type: String },
   matricule_fiscal: { type: String },
   notes : { type: String },
