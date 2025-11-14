@@ -178,6 +178,29 @@ const devis = () => {
       console.log(error);
     }
   };
+  const handleEdit = (quote) => {
+    try {
+      formik.setValues({
+        client_id: quote.client_id,
+        numero: quote.numero,
+        date_emission: quote.date_emission,
+        date_validite: quote.date_validite,
+        statut: quote.statut,
+        montant_ht: quote.montant_ht,
+        tva: quote.tva,
+        timbre_fiscal: quote.timbre_fiscal || 0.6,
+        montant_ttc: quote.montant_ttc,
+        montant_acompte: quote.montant_acompte || 0,
+        conditions_paiement: quote.conditions_paiement || "",
+        notes: quote.notes || "",
+        lignes: quote.lignes || [],
+      });
+      setEditingQuote(quote);
+      setShowModal(true);
+    } catch (error) {
+      console.log(error);
+    }
+  };
   const closeModal = () => {
     setShowModal(false);
     formik.resetForm();
