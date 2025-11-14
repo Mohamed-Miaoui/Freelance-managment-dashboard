@@ -17,7 +17,8 @@ export async function GET(req, { params }) {
     try {
       await dbConnect();
       const { id } = await params;
-      const facture = await Facture.findByIdAndUpdate(id, req.body, {
+      const body = await req.json();
+      const facture = await Facture.findByIdAndUpdate(id, body, {
         new: true,
       });
       return NextResponse.json(facture);

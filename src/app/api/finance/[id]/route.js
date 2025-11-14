@@ -17,7 +17,8 @@ export async function PUT(req, { params }) {
   try {
     await dbConnect();
     const { id } = await params;
-    const finance = await Finance.findByIdAndUpdate(id, req.body, {
+    const body = await req.json();
+    const finance = await Finance.findByIdAndUpdate(id, body, {
       new: true,
     });
     return NextResponse.json(finance);

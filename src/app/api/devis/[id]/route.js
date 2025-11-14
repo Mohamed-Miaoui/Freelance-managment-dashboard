@@ -18,7 +18,8 @@ export async function PUT(req, { params }) {
   try {
     await dbConnect();
     const { id } = await params;
-    const devis = await Devis.findByIdAndUpdate(id, req.body, {
+    const body = await req.json();
+    const devis = await Devis.findByIdAndUpdate(id, body, {
       new: true,
     });
     return NextResponse.json(devis);
