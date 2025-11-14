@@ -15,6 +15,7 @@ export async function POST(req, res) {
 
 export async function GET(req, res) {
   try {
+    await dbConnect();
     const devis = await Devis.find();
     return NextResponse.json(devis);
   } catch (error) {

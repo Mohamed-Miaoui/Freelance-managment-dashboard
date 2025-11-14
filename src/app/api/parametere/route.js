@@ -4,6 +4,7 @@ import { NextResponse } from "next/server";
 
 export async function GET(req, res) {
   try {
+    await dbConnect();
     const settings = await Parametres.getSettings();
     return NextResponse.json(settings);
   } catch (error) {
@@ -13,6 +14,7 @@ export async function GET(req, res) {
 
 export async function PUT(req, res) {
   try {
+    await dbConnect();
     const settings = await Parametres.getSettings();
     const { nom_complet, matricule_fiscal, adresse, telephone, email, rib, conditions_generales, logo_path, tva_assujetti, taux_tva } = await req.json();
     await Parametres.findOneAndUpdate({ _id: settings._id }, { $set: { nom_complet, matricule_fiscal, adresse, telephone, email, rib, conditions_generales, logo_path, tva_assujetti, taux_tva } }, { new: true });

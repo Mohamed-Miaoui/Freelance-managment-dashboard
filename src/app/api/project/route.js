@@ -15,6 +15,7 @@ export async function POST(req, res) {
 
 export async function GET(req, res) {
   try {
+    await dbConnect();
     const projects = await Project.find();
     return NextResponse.json(projects);
   } catch (error) {

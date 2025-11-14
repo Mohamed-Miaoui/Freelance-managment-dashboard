@@ -45,8 +45,6 @@ export default function Layout({ children }) {
   const currentTheme = themes[theme];
 
   const navLinks = [
-    { href: "/products", icon: Package, label: "Products" },
-    { href: "/orders", icon: ShoppingCart, label: "Orders" },
     { href: "/clients", icon: User, label: "Clients" },
     { href: "/projects", icon: Briefcase, label: "Projects" },
     { href: "/devis", icon: File, label: "Devis" },

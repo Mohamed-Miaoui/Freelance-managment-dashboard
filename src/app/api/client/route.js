@@ -16,7 +16,7 @@ export async function POST(req, res) {
 
 export async function GET(req, res) {
   try {
-
+    await dbConnect();
     const clients = await Client.find();
     return NextResponse.json(clients);
   } catch (error) {

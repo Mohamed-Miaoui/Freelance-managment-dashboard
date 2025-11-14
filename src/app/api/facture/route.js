@@ -15,6 +15,7 @@ export async function POST(req, res) {
 
 export async function GET(req, res) {
   try {
+    await dbConnect();
     const factures = await Facture.find();
     return NextResponse.json(factures);
   } catch (error) {
