@@ -21,39 +21,10 @@ const devis = () => {
   const [devis, setDevis] = useState([]);
   const [theme, setTheme] = useState("light");
   const [showModal, setShowModal] = useState(false);
-  const [editingQuote, setEditingQuote] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
-  const [formData, setFormData] = useState({
-    clientName: "",
-    amount: "",
-    expiryDate: "",
-    status: "Sent",
-  });
   const [editingDevis, setEditingDevis] = useState(null);
-  const [quotes, setQuotes] = useState([
-    {
-      id: "Q-2024-001",
-      clientName: "John Doe",
-      amount: 5000,
-      expiryDate: "2024-11-30",
-      status: "Accepted",
-    },
-    {
-      id: "Q-2024-002",
-      clientName: "Jane Smith",
-      amount: 8500,
-      expiryDate: "2024-12-05",
-      status: "Sent",
-    },
-    {
-      id: "Q-2024-003",
-      clientName: "Mike Johnson",
-      amount: 3200,
-      expiryDate: "2024-11-10",
-      status: "Declined",
-    },
-  ]);
+
   const [currentLine, setCurrentLine] = useState({
     description: "",
     montant: 0,
@@ -129,7 +100,6 @@ const devis = () => {
     try {
       const response = await axios.get("/api/client");
       setClients(response.data);
-      console.log(response.data);
     } catch (error) {
       console.log(error);
     }
@@ -140,6 +110,7 @@ const devis = () => {
     try {
       const response = await axios.get("/api/devis");
       setDevis(response.data);
+      console.log(response.data);
     } catch (error) {
       console.log(error);
     }
@@ -181,7 +152,7 @@ const devis = () => {
   const handleEdit = (quote) => {
     try {
       formik.setValues({
-        client_id: quote.client_id,
+        client_id: quote.client_id._id || quote.client_id,
         numero: quote.numero,
         date_emission: quote.date_emission,
         date_validite: quote.date_validite,
@@ -195,16 +166,38 @@ const devis = () => {
         notes: quote.notes || "",
         lignes: quote.lignes || [],
       });
-      setEditingQuote(quote);
+      setEditingDevis(quote);
       setShowModal(true);
     } catch (error) {
       console.log(error);
     }
   };
+
+  //close modal
   const closeModal = () => {
     setShowModal(false);
     formik.resetForm();
-    setEditingClient(null);
+    setEditingDevis(null);
+  };
+
+  const handleDelete = async (id) => {
+    if (confirm("Êtes-vous sûr de vouloir supprimer ce devis?")) {
+      try {
+        await axios.delete(`/api/devis/${id}`);
+        fetchDevis();
+        alert("Devis supprimé avec succès");
+      } catch (error) {
+        console.error("Error deleting devis:", error);
+        alert("Erreur lors de la suppression du devis");
+      }
+    }
+  };
+
+  const handleView = (dev) => {
+    // You can implement a view modal or redirect to a detail page
+    console.log("View devis:", dev);
+    // For now, you could alert or open a modal with devis details
+    alert(`Viewing devis: ${dev.numero}`);
   };
 
   const formik = useFormik({
@@ -266,38 +259,41 @@ const devis = () => {
 
   const currentTheme = themes[theme];
 
-  const filteredQuotes = quotes.filter(
-    (q) =>
-      (q.clientName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        q.id.toLowerCase().includes(searchTerm.toLowerCase())) &&
-      (statusFilter === "all" || q.status === statusFilter)
-  );
+  const filteredDevis = devis.filter((d) => {
+    const searchLower = searchTerm.toLowerCase();
+    const numeroMatch = d.numero?.toLowerCase().includes(searchLower);
+    const clientMatch = d.client_id?.nom?.toLowerCase().includes(searchLower);
 
-  const acceptedCount = quotes.filter((q) => q.status === "Accepted").length;
+    const matchesSearch = searchTerm === "" || numeroMatch || clientMatch;
+    const matchesStatus = statusFilter === "all" || d.statut === statusFilter;
+
+    return matchesSearch && matchesStatus;
+  });
+  const acceptedCount = devis.filter((d) => d.statut === "accepte").length;
   const conversionRate =
-    quotes.length > 0 ? (acceptedCount / quotes.length) * 100 : 0;
+    devis.length > 0 ? (acceptedCount / devis.length) * 100 : 0;
 
   const quoteStats = [
     {
-      label: "Total Quotes",
-      value: quotes.length,
+      label: "Total Devis",
+      value: devis.length,
       icon: FilePlus,
       color: "text-blue-600",
     },
     {
-      label: "Accepted",
+      label: "Acceptés",
       value: acceptedCount,
       icon: CheckSquare,
       color: "text-green-600",
     },
     {
-      label: "Pending",
-      value: quotes.filter((q) => q.status === "Sent").length,
+      label: "En Attente",
+      value: devis.filter((d) => d.statut === "en_attente").length,
       icon: Send,
       color: "text-yellow-600",
     },
     {
-      label: "Conversion Rate",
+      label: "Taux de Conversion",
       value: `${conversionRate.toFixed(1)}%`,
       icon: PieChart,
       color: "text-purple-600",
@@ -306,12 +302,14 @@ const devis = () => {
 
   const getStatusColor = (status) => {
     switch (status) {
-      case "Accepted":
+      case "accepte":
         return "bg-green-100 text-green-700";
-      case "Sent":
+      case "en_attente":
         return "bg-yellow-100 text-yellow-700";
-      case "Declined":
+      case "refuse":
         return "bg-red-100 text-red-700";
+      case "expire":
+        return "bg-gray-100 text-gray-700";
       default:
         return "bg-gray-100 text-gray-700";
     }
@@ -375,10 +373,11 @@ const devis = () => {
                 onChange={(e) => setStatusFilter(e.target.value)}
                 className={`px-4 py-2 border ${currentTheme.border} rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${currentTheme.card} ${currentTheme.text}`}
               >
-                <option value="all">All Status</option>
-                <option value="Sent">Sent</option>
-                <option value="Accepted">Accepted</option>
-                <option value="Declined">Declined</option>
+                <option value="all">Tous les statuts</option>
+                <option value="en_attente">En Attente</option>
+                <option value="accepte">Accepté</option>
+                <option value="refuse">Refusé</option>
+                <option value="expire">Expiré</option>
               </select>
               <button
                 onClick={() => setShowModal(true)}
@@ -408,7 +407,7 @@ const devis = () => {
                   <th
                     className={`px-6 py-4 text-left text-xs font-semibold ${currentTheme.text} uppercase tracking-wider`}
                   >
-                    Quote ID
+                    Numero
                   </th>
                   <th
                     className={`px-6 py-4 text-left text-xs font-semibold ${currentTheme.text} uppercase tracking-wider`}
@@ -418,17 +417,22 @@ const devis = () => {
                   <th
                     className={`px-6 py-4 text-left text-xs font-semibold ${currentTheme.text} uppercase tracking-wider`}
                   >
-                    Amount
+                    Montant TTC
                   </th>
                   <th
                     className={`px-6 py-4 text-left text-xs font-semibold ${currentTheme.text} uppercase tracking-wider`}
                   >
-                    Expiry Date
+                    Date Emission
                   </th>
                   <th
                     className={`px-6 py-4 text-left text-xs font-semibold ${currentTheme.text} uppercase tracking-wider`}
                   >
-                    Status
+                    Date Validité
+                  </th>
+                  <th
+                    className={`px-6 py-4 text-left text-xs font-semibold ${currentTheme.text} uppercase tracking-wider`}
+                  >
+                    Statut
                   </th>
                   <th
                     className={`px-6 py-4 text-right text-xs font-semibold ${currentTheme.text} uppercase tracking-wider`}
@@ -438,61 +442,94 @@ const devis = () => {
                 </tr>
               </thead>
               <tbody className={`divide-y ${currentTheme.border}`}>
-                {filteredQuotes.map((quote) => (
-                  <tr
-                    key={quote.id}
-                    className={`${currentTheme.hover} transition-colors`}
-                  >
-                    <td
-                      className={`px-6 py-4 whitespace-nowrap font-medium ${currentTheme.text}`}
+                {filteredDevis.length > 0 ? (
+                  filteredDevis.map((dev) => (
+                    <tr
+                      key={dev._id}
+                      className={`${currentTheme.hover} transition-colors`}
                     >
-                      {quote.id}
-                    </td>
-                    <td
-                      className={`px-6 py-4 whitespace-nowrap text-sm ${currentTheme.textSecondary}`}
-                    >
-                      {quote.clientName}
-                    </td>
-                    <td
-                      className={`px-6 py-4 whitespace-nowrap text-sm font-semibold ${currentTheme.text}`}
-                    >
-                      ${quote.amount.toLocaleString()}
-                    </td>
-                    <td
-                      className={`px-6 py-4 whitespace-nowrap text-sm ${currentTheme.textSecondary}`}
-                    >
-                      {quote.expiryDate}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <span
-                        className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(
-                          quote.status
-                        )}`}
+                      <td
+                        className={`px-6 py-4 whitespace-nowrap font-medium ${currentTheme.text}`}
                       >
-                        {quote.status}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-right text-sm">
-                      <button
-                        className={`${currentTheme.textSecondary} hover:text-blue-600 mr-3 transition-colors`}
+                        {dev.numero}
+                      </td>
+                      <td
+                        className={`px-6 py-4 whitespace-nowrap text-sm ${currentTheme.textSecondary}`}
                       >
-                        <Eye size={18} />
-                      </button>
-                      <button
-                        onClick={() => handleEdit(quote)}
-                        className={`${currentTheme.textSecondary} hover:text-blue-600 mr-3 transition-colors`}
+                        {dev.client_id?.nom || "N/A"}
+                      </td>
+                      <td
+                        className={`px-6 py-4 whitespace-nowrap text-sm font-semibold ${currentTheme.text}`}
                       >
-                        <Edit2 size={18} />
-                      </button>
-                      <button
-                        onClick={() => handleDelete(quote.id)}
-                        className={`${currentTheme.textSecondary} hover:text-red-600 transition-colors`}
+                        {new Intl.NumberFormat("fr-TN", {
+                          style: "currency",
+                          currency: "TND",
+                          minimumFractionDigits: 3,
+                        }).format(dev.montant_ttc)}
+                      </td>
+                      <td
+                        className={`px-6 py-4 whitespace-nowrap text-sm ${currentTheme.textSecondary}`}
                       >
-                        <Trash2 size={18} />
-                      </button>
+                        {new Date(dev.date_emission).toLocaleDateString(
+                          "fr-FR"
+                        )}
+                      </td>
+                      <td
+                        className={`px-6 py-4 whitespace-nowrap text-sm ${currentTheme.textSecondary}`}
+                      >
+                        {new Date(dev.date_validite).toLocaleDateString(
+                          "fr-FR"
+                        )}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <span
+                          className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(
+                            dev.statut
+                          )}`}
+                        >
+                          {STATUS_OPTIONS.find(
+                            (opt) => opt.value === dev.statut
+                          )?.label || dev.statut}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-right text-sm">
+                        <button
+                          onClick={() => handleView(dev)}
+                          className={`${currentTheme.textSecondary} hover:text-blue-600 mr-3 transition-colors`}
+                        >
+                          <Eye size={18} />
+                        </button>
+                        <button
+                          onClick={() => handleEdit(dev)}
+                          className={`${currentTheme.textSecondary} hover:text-blue-600 mr-3 transition-colors`}
+                        >
+                          <Edit2 size={18} />
+                        </button>
+                        <button
+                          onClick={() => handleDelete(dev._id)}
+                          className={`${currentTheme.textSecondary} hover:text-red-600 transition-colors`}
+                        >
+                          <Trash2 size={18} />
+                        </button>
+                      </td>
+                    </tr>
+                  ))
+                ) : (
+                  <tr>
+                    <td colSpan="7" className="px-6 py-12 text-center">
+                      <div className={`${currentTheme.textSecondary}`}>
+                        <FileQuestion
+                          size={48}
+                          className="mx-auto mb-4 opacity-50"
+                        />
+                        <p className="text-lg">Aucun devis trouvé</p>
+                        <p className="text-sm mt-2">
+                          Créez votre premier devis pour commencer
+                        </p>
+                      </div>
                     </td>
                   </tr>
-                ))}
+                )}
               </tbody>
             </table>
           </div>
@@ -507,7 +544,7 @@ const devis = () => {
               {/* Header - Fixed */}
               <div className="flex items-center justify-between mb-6">
                 <h2 className={`text-2xl font-bold ${currentTheme.text}`}>
-                  {editingQuote ? "Edit Quote" : "Create New Quote"}
+                  {editingDevis ? "Edit Quote" : "Create New Quote"}
                 </h2>
                 <button
                   onClick={closeModal}
@@ -519,397 +556,407 @@ const devis = () => {
 
               {/* Scrollable Content */}
               <div className="overflow-y-auto flex-1 pr-5">
-                <div className="space-y-4">
-                  {/* select client */}
-                  <div>
-                    <label
-                      className={`block text-sm font-medium ${currentTheme.text} mb-2`}
-                    >
-                      select client
-                    </label>
-                    <select
-                      name="client_id"
-                      value={values.client_id}
-                      onChange={handleChange}
-                      className={`w-full px-4 py-2 border ${currentTheme.border} rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${currentTheme.card} ${currentTheme.text}`}
-                    >
-                      <option value="">-- Select a client --</option>
-                      {clients.map((client) => (
-                        <option key={client._id} value={client._id}>
-                          {client.nom}
-                        </option>
-                      ))}
-                    </select>
-                    {errors.client_id && (
-                      <p className="text-red-500">{errors.client_id}</p>
-                    )}
-                  </div>
-
-                  <div className="grid grid-cols-4 gap-4">
+                {/* formik */}
+                <form onSubmit={handleSubmit}>
+                  <div className="space-y-6">
+                    {/* select client */}
                     <div>
                       <label
                         className={`block text-sm font-medium ${currentTheme.text} mb-2`}
                       >
-                        Numero
-                      </label>
-                      <input
-                        name="numero"
-                        type="text"
-                        value={values.numero}
-                        onChange={handleChange}
-                        className={`w-full px-4 py-2 border ${currentTheme.border} rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${currentTheme.card} ${currentTheme.text}`}
-                        placeholder="Devis-2024-001"
-                      />
-                    </div>
-                    <div>
-                      <label
-                        className={`block text-sm font-medium ${currentTheme.text} mb-2`}
-                      >
-                        Date d'emission
-                      </label>
-                      <input
-                        name="date_emission"
-                        type="date"
-                        value={values.date_emission}
-                        onChange={handleChange}
-                        className={`w-full px-4 py-2 border ${currentTheme.border} rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${currentTheme.card} ${currentTheme.text}`}
-                      />
-                    </div>
-                    <div>
-                      <label
-                        className={`block text-sm font-medium ${currentTheme.text} mb-2`}
-                      >
-                        Date d'échéance
-                      </label>
-                      <input
-                        name="date_validite"
-                        type="date"
-                        value={values.date_validite}
-                        onChange={handleChange}
-                        className={`w-full px-4 py-2 border ${currentTheme.border} rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${currentTheme.card} ${currentTheme.text}`}
-                      />
-                    </div>
-                    <div>
-                      <label
-                        className={`block text-sm font-medium ${currentTheme.text} mb-2`}
-                      >
-                        Statut
+                        select client
                       </label>
                       <select
-                        name="statut"
-                        value={values.statut}
+                        name="client_id"
+                        value={values.client_id}
                         onChange={handleChange}
                         className={`w-full px-4 py-2 border ${currentTheme.border} rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${currentTheme.card} ${currentTheme.text}`}
                       >
-                        {STATUS_OPTIONS.map((option) => (
-                          <option key={option.value} value={option.value}>
-                            {option.label}
+                        <option value="">-- Select a client --</option>
+                        {clients.map((client) => (
+                          <option key={client._id} value={client._id}>
+                            {client.nom}
                           </option>
                         ))}
                       </select>
-                      {errors.statut && (
-                        <p className="text-red-500">{errors.statut}</p>
+                      {errors.client_id && (
+                        <p className="text-red-500">{errors.client_id}</p>
+                      )}
+                    </div>
+
+                    <div className="grid grid-cols-4 gap-4">
+                      <div>
+                        <label
+                          className={`block text-sm font-medium ${currentTheme.text} mb-2`}
+                        >
+                          Numero{" "}
+                          {!editingDevis && (
+                            <span className="text-xs text-gray-500">
+                              (Auto-généré)
+                            </span>
+                          )}
+                        </label>
+                        <input
+                          name="numero"
+                          type="text"
+                          value={values.numero}
+                          readOnly
+                          className={`w-full px-4 py-2 border ${currentTheme.border} rounded-lg bg-gray-100 cursor-not-allowed ${currentTheme.text}`}
+                          placeholder="Auto-généré à la création"
+                        />
+                      </div>
+                      <div>
+                        <label
+                          className={`block text-sm font-medium ${currentTheme.text} mb-2`}
+                        >
+                          Date d'emission
+                        </label>
+                        <input
+                          name="date_emission"
+                          type="date"
+                          value={values.date_emission}
+                          onChange={handleChange}
+                          className={`w-full px-4 py-2 border ${currentTheme.border} rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${currentTheme.card} ${currentTheme.text}`}
+                        />
+                      </div>
+                      <div>
+                        <label
+                          className={`block text-sm font-medium ${currentTheme.text} mb-2`}
+                        >
+                          Date d'échéance
+                        </label>
+                        <input
+                          name="date_validite"
+                          type="date"
+                          value={values.date_validite}
+                          onChange={handleChange}
+                          className={`w-full px-4 py-2 border ${currentTheme.border} rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${currentTheme.card} ${currentTheme.text}`}
+                        />
+                      </div>
+                      <div>
+                        <label
+                          className={`block text-sm font-medium ${currentTheme.text} mb-2`}
+                        >
+                          Statut
+                        </label>
+                        <select
+                          name="statut"
+                          value={values.statut}
+                          onChange={handleChange}
+                          className={`w-full px-4 py-2 border ${currentTheme.border} rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${currentTheme.card} ${currentTheme.text}`}
+                        >
+                          <option value="">-- Sélectionner un statut --</option>
+                          {STATUS_OPTIONS.map((option) => (
+                            <option key={option.value} value={option.value}>
+                              {option.label}
+                            </option>
+                          ))}
+                        </select>
+                        {errors.statut && (
+                          <p className="text-red-500">{errors.statut}</p>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-4 gap-4">
+                      <div>
+                        <label
+                          className={`block text-sm font-medium ${currentTheme.text} mb-2`}
+                        >
+                          montant-ht
+                        </label>
+                        <div className="relative">
+                          <input
+                            name="montant_ht"
+                            type="number"
+                            value={values.montant_ht}
+                            onChange={handleChange}
+                            className={`w-full px-4 py-2 pr-16 border ${currentTheme.border} rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${currentTheme.card} ${currentTheme.text}`}
+                            placeholder="800"
+                          />
+                          <span
+                            className={`absolute right-4 top-1/2 -translate-y-1/2 ${currentTheme.textSecondary} font-medium`}
+                          >
+                            TND
+                          </span>
+                        </div>
+                      </div>
+                      <div>
+                        <label
+                          className={`block text-sm font-medium ${currentTheme.text} mb-2`}
+                        >
+                          TVA
+                        </label>
+                        <div className="relative">
+                          <input
+                            name="tva"
+                            type="number"
+                            min={0}
+                            max={100}
+                            value={values.tva}
+                            onChange={handleChange}
+                            className={`w-full px-4 py-2 pr-16 border ${currentTheme.border} rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${currentTheme.card} ${currentTheme.text}`}
+                            placeholder="19"
+                          />
+                          <span
+                            className={`absolute right-4 top-1/2 -translate-y-1/2 ${currentTheme.textSecondary} font-medium`}
+                          >
+                            %
+                          </span>
+                        </div>
+                      </div>
+                      <div>
+                        <label
+                          className={`block text-sm font-medium ${currentTheme.text} mb-2`}
+                        >
+                          montant_ttc
+                        </label>
+                        <div className="relative">
+                          <input
+                            name="montant_ttc"
+                            type="number"
+                            value={values.montant_ttc}
+                            onChange={handleChange}
+                            className={`w-full px-4 py-2 pr-16 border ${currentTheme.border} rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${currentTheme.card} ${currentTheme.text}`}
+                            placeholder="1000"
+                          />
+                          <span
+                            className={`absolute right-4 top-1/2 -translate-y-1/2 ${currentTheme.textSecondary} font-medium`}
+                          >
+                            TND
+                          </span>
+                        </div>
+                      </div>
+                      <div>
+                        <label
+                          className={`block text-sm font-medium ${currentTheme.text} mb-2`}
+                        >
+                          montant_acompte
+                        </label>
+                        <div className="relative">
+                          <input
+                            name="montant_acompte"
+                            type="number"
+                            value={values.montant_acompte}
+                            onChange={handleChange}
+                            className={`w-full px-4 py-2 pr-16 border ${currentTheme.border} rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${currentTheme.card} ${currentTheme.text}`}
+                            placeholder="500"
+                          />
+                          <span
+                            className={`absolute right-4 top-1/2 -translate-y-1/2 ${currentTheme.textSecondary} font-medium`}
+                          >
+                            TND
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div>
+                      <label
+                        className={`block text-sm font-medium ${currentTheme.text} mb-2`}
+                      >
+                        Condition de paiement
+                      </label>
+                      <textarea
+                        name="conditions_paiement"
+                        value={values.conditions_paiement}
+                        onChange={handleChange}
+                        rows={4}
+                        className={`w-full px-4 py-2 border ${currentTheme.border} rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${currentTheme.card} ${currentTheme.text}`}
+                        placeholder="first u must pay 50% of the total amount"
+                      />
+                    </div>
+
+                    <div>
+                      <label
+                        className={`block text-sm font-medium ${currentTheme.text} mb-2`}
+                      >
+                        Notes
+                      </label>
+                      <textarea
+                        name="notes"
+                        value={values.notes}
+                        onChange={handleChange}
+                        rows={4}
+                        className={`w-full px-4 py-2 border ${currentTheme.border} rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${currentTheme.card} ${currentTheme.text}`}
+                        placeholder="Additional notes..."
+                      />
+                    </div>
+
+                    {/* Line Items Section----------------- */}
+                    <div
+                      className={`border ${currentTheme.border} rounded-lg p-4`}
+                    >
+                      <h3
+                        className={`text-lg font-semibold ${currentTheme.text} mb-4`}
+                      >
+                        Lignes de Devis
+                      </h3>
+
+                      {/* Add Line Form */}
+                      <div className="grid grid-cols-12 gap-3 mb-4">
+                        <div className="col-span-9">
+                          <label className="block text-sm font-medium mb-2">
+                            Description
+                          </label>
+                          <input
+                            type="text"
+                            name="description"
+                            value={currentLine.description}
+                            onChange={handleLineChange}
+                            className={`w-full px-3 py-2 border ${currentTheme.border} rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${currentTheme.card} ${currentTheme.text}`}
+                            placeholder="Développement page d'accueil"
+                          />
+                        </div>
+
+                        <div className="col-span-2">
+                          <label className="block text-sm font-medium mb-2">
+                            Montant
+                          </label>
+                          <input
+                            name="montant"
+                            type="number"
+                            value={currentLine.montant}
+                            onChange={handleLineChange}
+                            className={`w-full px-3 py-2 border ${currentTheme.border} rounded-lg  ${currentTheme.text}`}
+                            placeholder="Montant"
+                          />
+                        </div>
+                        <div className="col-span-1 self-end">
+                          <button
+                            type="button"
+                            onClick={addLigne}
+                            className={`w-full px-3 py-3 ${currentTheme.primary} text-white rounded-lg font-medium transition-all hover:shadow-lg`}
+                          >
+                            <Plus className="ml-2" size={20} />
+                          </button>
+                        </div>
+                      </div>
+
+                      {/* Lines List */}
+                      {values.lignes.length > 0 && (
+                        <div className="space-y-2">
+                          <div
+                            className={`grid grid-cols-12 gap-3 px-3 py-2 ${currentTheme.textSecondary} text-xs font-semibold uppercase`}
+                          >
+                            <div className="col-span-9">Description</div>
+                            <div className="col-span-2">Montant</div>
+                            <div className="col-span-1"></div>
+                          </div>
+                          {values.lignes.map((ligne, index) => (
+                            <div
+                              key={index}
+                              className={`grid grid-cols-12 gap-3 px-3 py-2 border ${currentTheme.border} rounded-lg ${currentTheme.hover}`}
+                            >
+                              <div
+                                className={`col-span-9 ${currentTheme.text}`}
+                              >
+                                {ligne.description}
+                              </div>
+
+                              <div
+                                className={`col-span-2 font-semibold ${currentTheme.text}`}
+                              >
+                                {ligne.montant.toFixed(3)} TND
+                              </div>
+                              <div className="col-span-1 flex justify-end">
+                                <button
+                                  type="button"
+                                  onClick={() => removeLigne(index)}
+                                  className="text-red-600 hover:text-red-800 transition-colors"
+                                >
+                                  <Trash2 size={16} />
+                                </button>
+                              </div>
+                            </div>
+                          ))}
+
+                          {/* Total Summary */}
+                          <div
+                            className={`mt-4 pt-4 border-t ${currentTheme.border}`}
+                          >
+                            <div className="flex justify-end space-y-2">
+                              <div className="w-64">
+                                <div className="flex justify-between py-1">
+                                  <span className={currentTheme.textSecondary}>
+                                    Montant HT:
+                                  </span>
+                                  <span
+                                    className={`font-semibold ${currentTheme.text}`}
+                                  >
+                                    {values.montant_ht} TND
+                                  </span>
+                                </div>
+                                <div className="flex justify-between py-1">
+                                  <span className={currentTheme.textSecondary}>
+                                    TVA ({values.tva}%):
+                                  </span>
+                                  <span
+                                    className={`font-semibold ${currentTheme.text}`}
+                                  >
+                                    {(
+                                      (values.montant_ht * values.tva) /
+                                      100
+                                    ).toFixed(3)}{" "}
+                                    TND
+                                  </span>
+                                </div>
+                                <div className="flex justify-between py-1">
+                                  <span className={currentTheme.textSecondary}>
+                                    Timbre Fiscal:
+                                  </span>
+                                  <span
+                                    className={`font-semibold ${currentTheme.text}`}
+                                  >
+                                    0.600 TND
+                                  </span>
+                                </div>
+                                <div
+                                  className={`flex justify-between py-2 border-t ${currentTheme.border} mt-2`}
+                                >
+                                  <span
+                                    className={`font-bold ${currentTheme.text}`}
+                                  >
+                                    Total TTC:
+                                  </span>
+                                  <span
+                                    className={`font-bold text-lg ${currentTheme.text}`}
+                                  >
+                                    {values.montant_ttc} TND
+                                  </span>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+
+                      {values.lignes.length === 0 && (
+                        <div
+                          className={`text-center py-8 ${currentTheme.textSecondary}`}
+                        >
+                          Aucune ligne ajoutée. Ajoutez des lignes pour créer
+                          votre devis.
+                        </div>
                       )}
                     </div>
                   </div>
-
-                  <div className="grid grid-cols-4 gap-4">
-                    <div>
-                      <label
-                        className={`block text-sm font-medium ${currentTheme.text} mb-2`}
-                      >
-                        montant-ht
-                      </label>
-                      <div className="relative">
-                        <input
-                          name="montant_ht"
-                          type="number"
-                          value={values.montant_ht}
-                          onChange={handleChange}
-                          className={`w-full px-4 py-2 pr-16 border ${currentTheme.border} rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${currentTheme.card} ${currentTheme.text}`}
-                          placeholder="800"
-                        />
-                        <span
-                          className={`absolute right-4 top-1/2 -translate-y-1/2 ${currentTheme.textSecondary} font-medium`}
-                        >
-                          TND
-                        </span>
-                      </div>
-                    </div>
-                    <div>
-                      <label
-                        className={`block text-sm font-medium ${currentTheme.text} mb-2`}
-                      >
-                        TVA
-                      </label>
-                      <div className="relative">
-                        <input
-                          name="tva"
-                          type="number"
-                          min={0}
-                          max={100}
-                          value={values.tva}
-                          onChange={handleChange}
-                          className={`w-full px-4 py-2 pr-16 border ${currentTheme.border} rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${currentTheme.card} ${currentTheme.text}`}
-                          placeholder="19"
-                        />
-                        <span
-                          className={`absolute right-4 top-1/2 -translate-y-1/2 ${currentTheme.textSecondary} font-medium`}
-                        >
-                          %
-                        </span>
-                      </div>
-                    </div>
-                    <div>
-                      <label
-                        className={`block text-sm font-medium ${currentTheme.text} mb-2`}
-                      >
-                        montant_ttc
-                      </label>
-                      <div className="relative">
-                        <input
-                          name="montant_ttc"
-                          type="number"
-                          value={values.montant_ttc}
-                          onChange={handleChange}
-                          className={`w-full px-4 py-2 pr-16 border ${currentTheme.border} rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${currentTheme.card} ${currentTheme.text}`}
-                          placeholder="1000"
-                        />
-                        <span
-                          className={`absolute right-4 top-1/2 -translate-y-1/2 ${currentTheme.textSecondary} font-medium`}
-                        >
-                          TND
-                        </span>
-                      </div>
-                    </div>
-                    <div>
-                      <label
-                        className={`block text-sm font-medium ${currentTheme.text} mb-2`}
-                      >
-                        montant_acompte
-                      </label>
-                      <div className="relative">
-                        <input
-                          name="montant_acompte"
-                          type="number"
-                          value={values.montant_acompte}
-                          onChange={handleChange}
-                          className={`w-full px-4 py-2 pr-16 border ${currentTheme.border} rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${currentTheme.card} ${currentTheme.text}`}
-                          placeholder="500"
-                        />
-                        <span
-                          className={`absolute right-4 top-1/2 -translate-y-1/2 ${currentTheme.textSecondary} font-medium`}
-                        >
-                          TND
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div>
-                    <label
-                      className={`block text-sm font-medium ${currentTheme.text} mb-2`}
+                  {/* Footer Buttons - Fixed */}
+                  <div className="flex gap-3 pt-4 mt-4 border-t border-gray-200">
+                    <button
+                      type="submit"
+                      className={`flex-1 px-6 py-3 ${currentTheme.primary} text-white rounded-lg font-medium transition-all hover:shadow-lg`}
                     >
-                      Condition de paiement
-                    </label>
-                    <textarea
-                      name="conditions_paiement"
-                      value={values.conditions_paiement}
-                      onChange={handleChange}
-                      rows={4}
-                      className={`w-full px-4 py-2 border ${currentTheme.border} rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${currentTheme.card} ${currentTheme.text}`}
-                      placeholder="first u must pay 50% of the total amount"
-                    />
-                  </div>
-
-                  <div>
-                    <label
-                      className={`block text-sm font-medium ${currentTheme.text} mb-2`}
+                      {editingDevis ? "Update Quote" : "Create Quote"}
+                    </button>
+                    <button
+                      onClick={closeModal}
+                      className={`px-6 py-3 border ${currentTheme.border} ${currentTheme.text} rounded-lg font-medium ${currentTheme.hover} transition-colors`}
                     >
-                      Notes
-                    </label>
-                    <textarea
-                      name="notes"
-                      value={values.notes}
-                      onChange={handleChange}
-                      rows={4}
-                      className={`w-full px-4 py-2 border ${currentTheme.border} rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${currentTheme.card} ${currentTheme.text}`}
-                      placeholder="Additional notes..."
-                    />
+                      Cancel
+                    </button>
                   </div>
-
-                  {/* Line Items Section----------------- */}
-                  <div
-                    className={`border ${currentTheme.border} rounded-lg p-4`}
-                  >
-                    <h3
-                      className={`text-lg font-semibold ${currentTheme.text} mb-4`}
-                    >
-                      Lignes de Devis
-                    </h3>
-
-                    {/* Add Line Form */}
-                    <div className="grid grid-cols-12 gap-3 mb-4">
-                      <div className="col-span-9">
-                        <label className="block text-sm font-medium mb-2">
-                          Description
-                        </label>
-                        <input
-                          type="text"
-                          name="description"
-                          value={currentLine.description}
-                          onChange={handleLineChange}
-                          className={`w-full px-3 py-2 border ${currentTheme.border} rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${currentTheme.card} ${currentTheme.text}`}
-                          placeholder="Développement page d'accueil"
-                        />
-                      </div>
-
-                      <div className="col-span-2">
-                        <label className="block text-sm font-medium mb-2">
-                          Montant
-                        </label>
-                        <input
-                          name="montant"
-                          type="number"
-                          value={currentLine.montant}
-                          onChange={handleLineChange}
-                          className={`w-full px-3 py-2 border ${currentTheme.border} rounded-lg  ${currentTheme.text}`}
-                          placeholder="Montant"
-                        />
-                      </div>
-                      <div className="col-span-1 self-end">
-                        <button
-                          type="button"
-                          onClick={addLigne}
-                          className={`w-full px-3 py-3 ${currentTheme.primary} text-white rounded-lg font-medium transition-all hover:shadow-lg`}
-                        >
-                          <Plus className="ml-2" size={20} />
-                        </button>
-                      </div>
-                    </div>
-
-                    {/* Lines List */}
-                    {values.lignes.length > 0 && (
-                      <div className="space-y-2">
-                        <div
-                          className={`grid grid-cols-12 gap-3 px-3 py-2 ${currentTheme.textSecondary} text-xs font-semibold uppercase`}
-                        >
-                          <div className="col-span-9">Description</div>
-                          <div className="col-span-2">Montant</div>
-                          <div className="col-span-1"></div>
-                        </div>
-                        {values.lignes.map((ligne, index) => (
-                          <div
-                            key={index}
-                            className={`grid grid-cols-12 gap-3 px-3 py-2 border ${currentTheme.border} rounded-lg ${currentTheme.hover}`}
-                          >
-                            <div className={`col-span-9 ${currentTheme.text}`}>
-                              {ligne.description}
-                            </div>
-
-                            <div
-                              className={`col-span-2 font-semibold ${currentTheme.text}`}
-                            >
-                              {ligne.montant.toFixed(3)} TND
-                            </div>
-                            <div className="col-span-1 flex justify-end">
-                              <button
-                                type="button"
-                                onClick={() => removeLigne(index)}
-                                className="text-red-600 hover:text-red-800 transition-colors"
-                              >
-                                <Trash2 size={16} />
-                              </button>
-                            </div>
-                          </div>
-                        ))}
-
-                        {/* Total Summary */}
-                        <div
-                          className={`mt-4 pt-4 border-t ${currentTheme.border}`}
-                        >
-                          <div className="flex justify-end space-y-2">
-                            <div className="w-64">
-                              <div className="flex justify-between py-1">
-                                <span className={currentTheme.textSecondary}>
-                                  Montant HT:
-                                </span>
-                                <span
-                                  className={`font-semibold ${currentTheme.text}`}
-                                >
-                                  {values.montant_ht} TND
-                                </span>
-                              </div>
-                              <div className="flex justify-between py-1">
-                                <span className={currentTheme.textSecondary}>
-                                  TVA ({values.tva}%):
-                                </span>
-                                <span
-                                  className={`font-semibold ${currentTheme.text}`}
-                                >
-                                  {(
-                                    (values.montant_ht * values.tva) /
-                                    100
-                                  ).toFixed(3)}{" "}
-                                  TND
-                                </span>
-                              </div>
-                              <div className="flex justify-between py-1">
-                                <span className={currentTheme.textSecondary}>
-                                  Timbre Fiscal:
-                                </span>
-                                <span
-                                  className={`font-semibold ${currentTheme.text}`}
-                                >
-                                  0.600 TND
-                                </span>
-                              </div>
-                              <div
-                                className={`flex justify-between py-2 border-t ${currentTheme.border} mt-2`}
-                              >
-                                <span
-                                  className={`font-bold ${currentTheme.text}`}
-                                >
-                                  Total TTC:
-                                </span>
-                                <span
-                                  className={`font-bold text-lg ${currentTheme.text}`}
-                                >
-                                  {values.montant_ttc} TND
-                                </span>
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    )}
-
-                    {values.lignes.length === 0 && (
-                      <div
-                        className={`text-center py-8 ${currentTheme.textSecondary}`}
-                      >
-                        Aucune ligne ajoutée. Ajoutez des lignes pour créer
-                        votre devis.
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </div>
-
-              {/* Footer Buttons - Fixed */}
-              <div className="flex gap-3 pt-4 mt-4 border-t border-gray-200">
-                <button
-                  onClick={handleSubmit}
-                  className={`flex-1 px-6 py-3 ${currentTheme.primary} text-white rounded-lg font-medium transition-all hover:shadow-lg`}
-                >
-                  {editingQuote ? "Update Quote" : "Create Quote"}
-                </button>
-                <button
-                  onClick={closeModal}
-                  className={`px-6 py-3 border ${currentTheme.border} ${currentTheme.text} rounded-lg font-medium ${currentTheme.hover} transition-colors`}
-                >
-                  Cancel
-                </button>
+                </form>
               </div>
             </div>
           </div>
