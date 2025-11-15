@@ -13,6 +13,7 @@ import {
   Eye,
   FileQuestion,
   Printer,
+  Download,
 } from "lucide-react";
 import { useFormik } from "formik";
 import axios from "axios";
@@ -195,13 +196,6 @@ const devis = () => {
         alert("Erreur lors de la suppression du devis");
       }
     }
-  };
-
-  const handleView = (dev) => {
-    // You can implement a view modal or redirect to a detail page
-    console.log("View devis:", dev);
-    // For now, you could alert or open a modal with devis details
-    alert(`Viewing devis: ${dev.numero}`);
   };
 
   //  print handler
@@ -504,26 +498,21 @@ const devis = () => {
                       <td className="px-6 py-4 whitespace-nowrap text-right text-sm">
                         <button
                           onClick={() => handlePrint(dev)}
-                          className={`${currentTheme.textSecondary} hover:text-green-600 mr-3  cursor-pointer transition-all duration-200 ease-in-out hover:scale-110`}
-                          title="Imprimer"
+                          className={`${currentTheme.textSecondary} hover:text-green-600 mr-3 cursor-pointer transition-all duration-200 ease-in-out hover:scale-110`}
+                          title="Télécharger PDF"
                         >
-                          <Printer size={18} />
+                          <Download size={18} />
                         </button>
-                        <button
-                          onClick={() => handleView(dev)}
-                          className={`${currentTheme.textSecondary} hover:text-blue-600 mr-3 transition-all duration-200 ease-in-out hover:scale-110`}
-                        >
-                          <Eye size={18} />
-                        </button>
+
                         <button
                           onClick={() => handleEdit(dev)}
-                          className={`${currentTheme.textSecondary} hover:text-blue-600 mr-3 transition-all duration-200 ease-in-out hover:scale-110`}
+                          className={`${currentTheme.textSecondary} hover:text-blue-600 mr-3 cursor-pointer transition-all duration-200 ease-in-out hover:scale-110`}
                         >
                           <Edit2 size={18} />
                         </button>
                         <button
                           onClick={() => handleDelete(dev._id)}
-                          className={`${currentTheme.textSecondary} hover:text-red-600 transition-all duration-200 ease-in-out hover:scale-110`}
+                          className={`${currentTheme.textSecondary} hover:text-red-600 cursor-pointer transition-all duration-200 ease-in-out hover:scale-110`}
                         >
                           <Trash2 size={18} />
                         </button>
