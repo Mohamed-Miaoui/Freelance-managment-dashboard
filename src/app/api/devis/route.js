@@ -44,7 +44,7 @@ export async function GET(req) {
   try {
     await dbConnect();
     const devis = await Devis.find()
-      .populate('client_id', 'nom email') // Populate client info
+      .populate('client_id') // Populate client info
       .sort({ created_at: -1 }); // Sort by newest first
     
     return NextResponse.json(devis);

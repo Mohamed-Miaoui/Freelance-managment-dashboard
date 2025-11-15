@@ -12,9 +12,11 @@ import {
   X,
   Eye,
   FileQuestion,
+  Printer,
 } from "lucide-react";
 import { useFormik } from "formik";
 import axios from "axios";
+import DevisPrintModal from "@/app/components/DevisPrintModal";
 
 const devis = () => {
   const [clients, setClients] = useState([]);
@@ -25,6 +27,8 @@ const devis = () => {
   const [statusFilter, setStatusFilter] = useState("all");
   const [editingDevis, setEditingDevis] = useState(null);
 
+  // state for print preview
+  const [printDevis, setPrintDevis] = useState(null);
   const [currentLine, setCurrentLine] = useState({
     description: "",
     montant: 0,
@@ -198,6 +202,11 @@ const devis = () => {
     console.log("View devis:", dev);
     // For now, you could alert or open a modal with devis details
     alert(`Viewing devis: ${dev.numero}`);
+  };
+
+  //  print handler
+  const handlePrint = (dev) => {
+    setPrintDevis(dev);
   };
 
   const formik = useFormik({
@@ -494,20 +503,27 @@ const devis = () => {
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-right text-sm">
                         <button
+                          onClick={() => handlePrint(dev)}
+                          className={`${currentTheme.textSecondary} hover:text-green-600 mr-3  cursor-pointer transition-all duration-200 ease-in-out hover:scale-110`}
+                          title="Imprimer"
+                        >
+                          <Printer size={18} />
+                        </button>
+                        <button
                           onClick={() => handleView(dev)}
-                          className={`${currentTheme.textSecondary} hover:text-blue-600 mr-3 transition-colors`}
+                          className={`${currentTheme.textSecondary} hover:text-blue-600 mr-3 transition-all duration-200 ease-in-out hover:scale-110`}
                         >
                           <Eye size={18} />
                         </button>
                         <button
                           onClick={() => handleEdit(dev)}
-                          className={`${currentTheme.textSecondary} hover:text-blue-600 mr-3 transition-colors`}
+                          className={`${currentTheme.textSecondary} hover:text-blue-600 mr-3 transition-all duration-200 ease-in-out hover:scale-110`}
                         >
                           <Edit2 size={18} />
                         </button>
                         <button
                           onClick={() => handleDelete(dev._id)}
-                          className={`${currentTheme.textSecondary} hover:text-red-600 transition-colors`}
+                          className={`${currentTheme.textSecondary} hover:text-red-600 transition-all duration-200 ease-in-out hover:scale-110`}
                         >
                           <Trash2 size={18} />
                         </button>
@@ -962,6 +978,14 @@ const devis = () => {
           </div>
         )}
       </div>
+      {/* Print Modal */}
+      {printDevis && (
+        <DevisPrintModal
+          devis={printDevis}
+          clientInfo={printDevis.client_id}
+          onClose={() => setPrintDevis(null)}
+        />
+      )}
     </div>
   );
 };
