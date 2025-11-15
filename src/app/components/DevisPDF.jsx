@@ -1,207 +1,239 @@
 import React from "react";
-import {
-  Document,
-  Page,
-  Text,
-  View,
-  StyleSheet,
-  Font,
-} from "@react-pdf/renderer";
+import { Document, Page, Text, View, StyleSheet } from "@react-pdf/renderer";
 
-// Define styles
+// Professional black & white styles
 const styles = StyleSheet.create({
   page: {
-    padding: 40,
-    fontSize: 10,
+    padding: 30,
+    fontSize: 9,
     fontFamily: "Helvetica",
+    lineHeight: 1.3,
   },
+  // Header Section
   header: {
     flexDirection: "row",
     justifyContent: "space-between",
-    marginBottom: 30,
+    marginBottom: 20,
+    paddingBottom: 15,
+    borderBottomWidth: 2,
+    borderBottomColor: "#000000",
   },
   companyInfo: {
-    width: "45%",
+    width: "50%",
   },
   companyName: {
-    fontSize: 20,
-    fontWeight: "bold",
-    color: "#2563eb",
-    marginBottom: 10,
+    fontSize: 16,
+    fontFamily: "Helvetica-Bold",
+    marginBottom: 6,
+    letterSpacing: 0.5,
+  },
+  companyDetails: {
+    fontSize: 8,
+    color: "#333333",
+    marginBottom: 1,
+  },
+  devisSection: {
+    width: "45%",
+    textAlign: "right",
   },
   devisTitle: {
-    textAlign: "right",
-    width: "45%",
-  },
-  devisTitleBox: {
-    backgroundColor: "#2563eb",
-    color: "white",
-    padding: 10,
-    fontSize: 18,
-    fontWeight: "bold",
-    textAlign: "center",
-    marginBottom: 10,
+    fontSize: 24,
+    fontFamily: "Helvetica-Bold",
+    marginBottom: 20,
+    letterSpacing: 1,
   },
   devisNumber: {
-    fontSize: 14,
-    fontWeight: "bold",
-    marginBottom: 5,
+    fontSize: 11,
+    fontFamily: "Helvetica-Bold",
+    marginBottom: 4,
   },
-  smallText: {
-    fontSize: 9,
-    color: "#6b7280",
-    marginBottom: 2,
+  dateText: {
+    fontSize: 8,
+    color: "#333333",
+    marginBottom: 1,
   },
-  clientBox: {
-    backgroundColor: "#f9fafb",
-    padding: 15,
-    borderLeftWidth: 4,
-    borderLeftColor: "#2563eb",
-    marginBottom: 20,
+
+  // Client Section
+  clientSection: {
+    marginBottom: 18,
+    padding: 12,
+    backgroundColor: "#f8f8f8",
+    borderLeftWidth: 3,
+    borderLeftColor: "#000000",
   },
-  clientTitle: {
-    fontSize: 9,
-    fontWeight: "bold",
-    color: "#6b7280",
+  sectionTitle: {
+    fontSize: 8,
+    fontFamily: "Helvetica-Bold",
     textTransform: "uppercase",
-    marginBottom: 8,
+    marginBottom: 6,
+    letterSpacing: 0.5,
   },
   clientName: {
-    fontSize: 12,
-    fontWeight: "bold",
-    marginBottom: 5,
+    fontSize: 11,
+    fontFamily: "Helvetica-Bold",
+    marginBottom: 4,
   },
+  clientDetail: {
+    fontSize: 8,
+    color: "#333333",
+    marginBottom: 1,
+  },
+
+  // Table
   table: {
-    marginBottom: 20,
+    marginBottom: 15,
   },
   tableHeader: {
     flexDirection: "row",
-    backgroundColor: "#2563eb",
-    color: "white",
-    padding: 10,
-    fontWeight: "bold",
+    borderBottomWidth: 2,
+    borderBottomColor: "#000000",
+    paddingVertical: 6,
+    backgroundColor: "#f0f0f0",
   },
   tableRow: {
     flexDirection: "row",
-    borderBottomWidth: 1,
-    borderBottomColor: "#e5e7eb",
-    padding: 10,
+    borderBottomWidth: 0.5,
+    borderBottomColor: "#cccccc",
+    paddingVertical: 5,
+    minHeight: 20,
   },
-  descriptionColumn: {
-    width: "70%",
+  colDescription: {
+    width: "75%",
+    paddingRight: 8,
   },
-  amountColumn: {
-    width: "30%",
+  colAmount: {
+    width: "25%",
     textAlign: "right",
   },
-  totalsContainer: {
+  tableHeaderText: {
+    fontSize: 8,
+    fontFamily: "Helvetica-Bold",
+    textTransform: "uppercase",
+  },
+  tableCellText: {
+    fontSize: 8,
+  },
+  tableCellAmount: {
+    fontSize: 8,
+    fontFamily: "Helvetica-Bold",
+  },
+
+  // Totals
+  totalsSection: {
     marginLeft: "auto",
-    width: "40%",
-    marginBottom: 20,
+    width: "45%",
+    marginBottom: 15,
   },
   totalRow: {
     flexDirection: "row",
     justifyContent: "space-between",
-    paddingVertical: 5,
-    borderBottomWidth: 1,
-    borderBottomColor: "#e5e7eb",
+    paddingVertical: 3,
+    borderBottomWidth: 0.5,
+    borderBottomColor: "#cccccc",
   },
   totalLabel: {
-    fontSize: 9,
-    color: "#6b7280",
+    fontSize: 8,
+    color: "#333333",
   },
   totalValue: {
-    fontSize: 9,
-    fontWeight: "bold",
+    fontSize: 8,
+    fontFamily: "Helvetica-Bold",
   },
   grandTotalRow: {
     flexDirection: "row",
     justifyContent: "space-between",
-    backgroundColor: "#2563eb",
-    color: "white",
-    padding: 10,
+    paddingVertical: 8,
     marginTop: 5,
+    backgroundColor: "#000000",
+    color: "#ffffff",
+    paddingHorizontal: 10,
   },
   grandTotalLabel: {
-    fontSize: 12,
-    fontWeight: "bold",
+    fontSize: 10,
+    fontFamily: "Helvetica-Bold",
+    color: "#ffffff",
   },
   grandTotalValue: {
-    fontSize: 14,
-    fontWeight: "bold",
+    fontSize: 12,
+    fontFamily: "Helvetica-Bold",
+    color: "#ffffff",
   },
-  acompteBox: {
+  acompteRow: {
     flexDirection: "row",
     justifyContent: "space-between",
-    backgroundColor: "#f0fdf4",
-    padding: 8,
-    marginTop: 5,
+    paddingVertical: 5,
+    marginTop: 3,
+    paddingHorizontal: 8,
     borderWidth: 1,
-    borderColor: "#86efac",
-    color: "#166534",
+    borderColor: "#000000",
   },
-  conditionsBox: {
-    backgroundColor: "#fefce8",
-    padding: 15,
-    borderLeftWidth: 4,
-    borderLeftColor: "#facc15",
-    marginBottom: 15,
+  acompteText: {
+    fontSize: 8,
+    fontFamily: "Helvetica-Bold",
   },
-  notesBox: {
-    backgroundColor: "#f9fafb",
-    padding: 15,
-    marginBottom: 20,
+
+  // Conditions & Notes
+  infoBox: {
+    marginBottom: 10,
+    padding: 8,
+    backgroundColor: "#f8f8f8",
+    borderLeftWidth: 2,
+    borderLeftColor: "#000000",
   },
-  boxTitle: {
-    fontSize: 9,
-    fontWeight: "bold",
+  infoTitle: {
+    fontSize: 8,
+    fontFamily: "Helvetica-Bold",
     textTransform: "uppercase",
-    marginBottom: 8,
-    color: "#374151",
+    marginBottom: 4,
+    letterSpacing: 0.5,
   },
-  boxText: {
-    fontSize: 9,
-    lineHeight: 1.5,
-    color: "#374151",
+  infoText: {
+    fontSize: 7,
+    lineHeight: 1.4,
+    color: "#333333",
   },
+
+  // Signatures
   signatureSection: {
     flexDirection: "row",
     justifyContent: "space-between",
-    marginTop: 40,
-    paddingTop: 20,
-    borderTopWidth: 2,
-    borderTopColor: "#d1d5db",
+    marginTop: 15,
+    paddingTop: 12,
+    borderTopWidth: 1,
+    borderTopColor: "#000000",
   },
   signatureBox: {
     width: "45%",
     textAlign: "center",
   },
   signatureLabel: {
-    fontSize: 10,
-    fontWeight: "bold",
-    marginBottom: 40,
+    fontSize: 8,
+    fontFamily: "Helvetica-Bold",
+    marginBottom: 25,
   },
   signatureLine: {
-    borderTopWidth: 2,
-    borderTopColor: "#9ca3af",
-    paddingTop: 5,
-    marginTop: 10,
+    borderTopWidth: 1,
+    borderTopColor: "#000000",
+    paddingTop: 3,
+    marginTop: 5,
   },
   signatureNote: {
-    fontSize: 8,
-    color: "#6b7280",
+    fontSize: 7,
+    color: "#666666",
   },
+
+  // Footer
   footer: {
     position: "absolute",
-    bottom: 30,
-    left: 40,
-    right: 40,
+    bottom: 20,
+    left: 30,
+    right: 30,
     textAlign: "center",
-    fontSize: 8,
-    color: "#9ca3af",
-    borderTopWidth: 1,
-    borderTopColor: "#e5e7eb",
-    paddingTop: 10,
+    fontSize: 7,
+    color: "#999999",
+    borderTopWidth: 0.5,
+    borderTopColor: "#cccccc",
+    paddingTop: 6,
   },
 });
 
@@ -228,38 +260,40 @@ const DevisPDF = ({ devis, clientInfo }) => {
         <View style={styles.header}>
           <View style={styles.companyInfo}>
             <Text style={styles.companyName}>{clientInfo.nom}</Text>
-            <Text style={styles.smallText}>{clientInfo.adresse}</Text>
-            <Text style={styles.smallText}>Tél: {clientInfo.telephone}</Text>
-            <Text style={styles.smallText}>Email: {clientInfo.email}</Text>
-            <Text style={styles.smallText}>
+            <Text style={styles.companyDetails}>{clientInfo.adresse}</Text>
+            <Text style={styles.companyDetails}>
+              Tél: {clientInfo.telephone}
+            </Text>
+            <Text style={styles.companyDetails}>Email: {clientInfo.email}</Text>
+            <Text style={styles.companyDetails}>
               M.F: {clientInfo.matricule_fiscal}
             </Text>
           </View>
 
-          <View style={styles.devisTitle}>
-            <View style={styles.devisTitleBox}>
-              <Text>DEVIS</Text>
-            </View>
+          <View style={styles.devisSection}>
+            <Text style={styles.devisTitle}>DEVIS</Text>
             <Text style={styles.devisNumber}>N° {devis.numero}</Text>
-            <Text style={styles.smallText}>
+            <Text style={styles.dateText}>
               Date: {formatDate(devis.date_emission)}
             </Text>
-            <Text style={styles.smallText}>
+            <Text style={styles.dateText}>
               Validité: {formatDate(devis.date_validite)}
             </Text>
           </View>
         </View>
 
         {/* Client Info */}
-        <View style={styles.clientBox}>
-          <Text style={styles.clientTitle}>Client</Text>
+        <View style={styles.clientSection}>
+          <Text style={styles.sectionTitle}>Destinataire</Text>
           <Text style={styles.clientName}>{devis.client_id?.nom}</Text>
-          <Text style={styles.smallText}>{devis.client_id?.adresse}</Text>
-          <Text style={styles.smallText}>
+          <Text style={styles.clientDetail}>{devis.client_id?.adresse}</Text>
+          <Text style={styles.clientDetail}>
             Tél: {devis.client_id?.telephone}
           </Text>
-          <Text style={styles.smallText}>Email: {devis.client_id?.email}</Text>
-          <Text style={styles.smallText}>
+          <Text style={styles.clientDetail}>
+            Email: {devis.client_id?.email}
+          </Text>
+          <Text style={styles.clientDetail}>
             M.F: {devis.client_id?.matricule_fiscal}
           </Text>
         </View>
@@ -267,13 +301,19 @@ const DevisPDF = ({ devis, clientInfo }) => {
         {/* Items Table */}
         <View style={styles.table}>
           <View style={styles.tableHeader}>
-            <Text style={styles.descriptionColumn}>Description</Text>
-            <Text style={styles.amountColumn}>Montant (TND)</Text>
+            <Text style={[styles.colDescription, styles.tableHeaderText]}>
+              Description
+            </Text>
+            <Text style={[styles.colAmount, styles.tableHeaderText]}>
+              Montant (TND)
+            </Text>
           </View>
           {devis.lignes?.map((ligne, index) => (
             <View key={index} style={styles.tableRow}>
-              <Text style={styles.descriptionColumn}>{ligne.description}</Text>
-              <Text style={styles.amountColumn}>
+              <Text style={[styles.colDescription, styles.tableCellText]}>
+                {ligne.description}
+              </Text>
+              <Text style={[styles.colAmount, styles.tableCellAmount]}>
                 {formatCurrency(ligne.montant)}
               </Text>
             </View>
@@ -281,7 +321,7 @@ const DevisPDF = ({ devis, clientInfo }) => {
         </View>
 
         {/* Totals */}
-        <View style={styles.totalsContainer}>
+        <View style={styles.totalsSection}>
           <View style={styles.totalRow}>
             <Text style={styles.totalLabel}>Montant HT:</Text>
             <Text style={styles.totalValue}>
@@ -302,18 +342,16 @@ const DevisPDF = ({ devis, clientInfo }) => {
           </View>
 
           <View style={styles.grandTotalRow}>
-            <Text style={styles.grandTotalLabel}>Total TTC:</Text>
+            <Text style={styles.grandTotalLabel}>TOTAL TTC</Text>
             <Text style={styles.grandTotalValue}>
               {formatCurrency(devis.montant_ttc)} TND
             </Text>
           </View>
 
           {devis.montant_acompte > 0 && (
-            <View style={styles.acompteBox}>
-              <Text style={{ fontSize: 9, fontWeight: "bold" }}>
-                Acompte demandé:
-              </Text>
-              <Text style={{ fontSize: 9, fontWeight: "bold" }}>
+            <View style={styles.acompteRow}>
+              <Text style={styles.acompteText}>Acompte demandé:</Text>
+              <Text style={styles.acompteText}>
                 {formatCurrency(devis.montant_acompte)} TND
               </Text>
             </View>
@@ -322,31 +360,31 @@ const DevisPDF = ({ devis, clientInfo }) => {
 
         {/* Payment Conditions */}
         {devis.conditions_paiement && (
-          <View style={styles.conditionsBox}>
-            <Text style={styles.boxTitle}>Conditions de Paiement</Text>
-            <Text style={styles.boxText}>{devis.conditions_paiement}</Text>
+          <View style={styles.infoBox}>
+            <Text style={styles.infoTitle}>Conditions de Paiement</Text>
+            <Text style={styles.infoText}>{devis.conditions_paiement}</Text>
           </View>
         )}
 
         {/* Notes */}
         {devis.notes && (
-          <View style={styles.notesBox}>
-            <Text style={styles.boxTitle}>Notes</Text>
-            <Text style={styles.boxText}>{devis.notes}</Text>
+          <View style={styles.infoBox}>
+            <Text style={styles.infoTitle}>Notes</Text>
+            <Text style={styles.infoText}>{devis.notes}</Text>
           </View>
         )}
 
         {/* Signatures */}
         <View style={styles.signatureSection}>
           <View style={styles.signatureBox}>
-            <Text style={styles.signatureLabel}>Le Prestataire</Text>
+            <Text style={styles.signatureLabel}>LE PRESTATAIRE</Text>
             <View style={styles.signatureLine}>
               <Text style={styles.signatureNote}>Signature & Cachet</Text>
             </View>
           </View>
 
           <View style={styles.signatureBox}>
-            <Text style={styles.signatureLabel}>Le Client</Text>
+            <Text style={styles.signatureLabel}>LE CLIENT</Text>
             <Text style={styles.signatureNote}>(Bon pour accord)</Text>
             <View style={styles.signatureLine}>
               <Text style={styles.signatureNote}>Signature & Date</Text>
@@ -356,8 +394,7 @@ const DevisPDF = ({ devis, clientInfo }) => {
 
         {/* Footer */}
         <Text style={styles.footer}>
-          Document généré automatiquement - {clientInfo.nom} -{" "}
-          {clientInfo.email}
+          {clientInfo.nom} • {clientInfo.email} • {clientInfo.telephone}
         </Text>
       </Page>
     </Document>
