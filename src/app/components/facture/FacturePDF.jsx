@@ -1,20 +1,20 @@
 import React from "react";
 import { Document, Page, Text, View, StyleSheet } from "@react-pdf/renderer";
 
-// Professional black & white styles for invoice
+// Optimized styles to fit on one page
 const styles = StyleSheet.create({
   page: {
-    padding: 30,
-    fontSize: 9,
+    padding: 25,
+    fontSize: 8,
     fontFamily: "Helvetica",
-    lineHeight: 1.3,
+    lineHeight: 1.2,
   },
   // Header Section
   header: {
     flexDirection: "row",
     justifyContent: "space-between",
-    marginBottom: 20,
-    paddingBottom: 15,
+    marginBottom: 12,
+    paddingBottom: 10,
     borderBottomWidth: 2,
     borderBottomColor: "#000000",
   },
@@ -22,13 +22,13 @@ const styles = StyleSheet.create({
     width: "50%",
   },
   companyName: {
-    fontSize: 16,
+    fontSize: 14,
     fontFamily: "Helvetica-Bold",
-    marginBottom: 6,
+    marginBottom: 10,
     letterSpacing: 0.5,
   },
   companyDetails: {
-    fontSize: 8,
+    fontSize: 7,
     color: "#333333",
     marginBottom: 1,
   },
@@ -37,90 +37,89 @@ const styles = StyleSheet.create({
     textAlign: "right",
   },
   factureTitle: {
-    fontSize: 26,
+    fontSize: 22,
     fontFamily: "Helvetica-Bold",
     marginBottom: 20,
     letterSpacing: 1.5,
   },
   factureNumber: {
-    fontSize: 11,
+    fontSize: 9,
     fontFamily: "Helvetica-Bold",
-    marginBottom: 4,
+    marginBottom: 2,
   },
   dateText: {
-    fontSize: 8,
+    fontSize: 7,
     color: "#333333",
     marginBottom: 1,
   },
   statusBox: {
-    marginTop: 5,
-    padding: 5,
+    marginTop: 3,
+    padding: 3,
     borderWidth: 2,
     borderColor: "#000000",
     textAlign: "center",
   },
   statusText: {
-    fontSize: 9,
+    fontSize: 7,
     fontFamily: "Helvetica-Bold",
     textTransform: "uppercase",
   },
 
   // Client Section
   clientSection: {
-    marginBottom: 18,
-    padding: 12,
+    marginBottom: 10,
+    padding: 8,
     backgroundColor: "#f8f8f8",
     borderLeftWidth: 3,
     borderLeftColor: "#000000",
   },
   sectionTitle: {
-    fontSize: 8,
+    fontSize: 7,
     fontFamily: "Helvetica-Bold",
     textTransform: "uppercase",
-    marginBottom: 6,
+    marginBottom: 4,
     letterSpacing: 0.5,
   },
   clientName: {
-    fontSize: 11,
+    fontSize: 9,
     fontFamily: "Helvetica-Bold",
-    marginBottom: 4,
+    marginBottom: 2,
   },
   clientDetail: {
-    fontSize: 8,
+    fontSize: 7,
     color: "#333333",
     marginBottom: 1,
   },
 
-  // Reference section (if from devis)
+  // Reference section
   referenceBox: {
-    marginBottom: 15,
-    padding: 8,
+    marginBottom: 10,
+    padding: 5,
     backgroundColor: "#f0f0f0",
     borderWidth: 1,
     borderColor: "#cccccc",
   },
   referenceText: {
-    fontSize: 8,
+    fontSize: 7,
     color: "#333333",
   },
 
   // Table
   table: {
-    marginBottom: 15,
+    marginBottom: 10,
   },
   tableHeader: {
     flexDirection: "row",
     borderBottomWidth: 2,
     borderBottomColor: "#000000",
-    paddingVertical: 6,
+    paddingVertical: 4,
     backgroundColor: "#f0f0f0",
   },
   tableRow: {
     flexDirection: "row",
     borderBottomWidth: 0.5,
     borderBottomColor: "#cccccc",
-    paddingVertical: 5,
-    minHeight: 20,
+    paddingVertical: 4,
   },
   colDescription: {
     width: "75%",
@@ -131,15 +130,15 @@ const styles = StyleSheet.create({
     textAlign: "right",
   },
   tableHeaderText: {
-    fontSize: 8,
+    fontSize: 7,
     fontFamily: "Helvetica-Bold",
     textTransform: "uppercase",
   },
   tableCellText: {
-    fontSize: 8,
+    fontSize: 7,
   },
   tableCellAmount: {
-    fontSize: 8,
+    fontSize: 7,
     fontFamily: "Helvetica-Bold",
   },
 
@@ -147,79 +146,79 @@ const styles = StyleSheet.create({
   totalsSection: {
     marginLeft: "auto",
     width: "45%",
-    marginBottom: 15,
+    marginBottom: 10,
   },
   totalRow: {
     flexDirection: "row",
     justifyContent: "space-between",
-    paddingVertical: 3,
+    paddingVertical: 2,
     borderBottomWidth: 0.5,
     borderBottomColor: "#cccccc",
   },
   totalLabel: {
-    fontSize: 8,
+    fontSize: 7,
     color: "#333333",
   },
   totalValue: {
-    fontSize: 8,
+    fontSize: 7,
     fontFamily: "Helvetica-Bold",
   },
   grandTotalRow: {
     flexDirection: "row",
     justifyContent: "space-between",
-    paddingVertical: 8,
-    marginTop: 5,
+    paddingVertical: 5,
+    marginTop: 3,
     backgroundColor: "#000000",
     color: "#ffffff",
-    paddingHorizontal: 10,
+    paddingHorizontal: 8,
   },
   grandTotalLabel: {
-    fontSize: 10,
+    fontSize: 8,
     fontFamily: "Helvetica-Bold",
     color: "#ffffff",
   },
   grandTotalValue: {
-    fontSize: 12,
+    fontSize: 10,
     fontFamily: "Helvetica-Bold",
     color: "#ffffff",
   },
   soldeRow: {
     flexDirection: "row",
     justifyContent: "space-between",
-    paddingVertical: 6,
-    marginTop: 3,
-    paddingHorizontal: 8,
+    paddingVertical: 4,
+    marginTop: 2,
+    paddingHorizontal: 6,
     borderWidth: 2,
     borderColor: "#000000",
     backgroundColor: "#f8f8f8",
   },
   soldeText: {
-    fontSize: 9,
+    fontSize: 8,
     fontFamily: "Helvetica-Bold",
   },
 
-  // Payment section
+  // Payment section - COMPACT
   paiementsSection: {
-    marginBottom: 15,
-    padding: 10,
+    marginBottom: 8,
+    padding: 6,
     backgroundColor: "#f8f8f8",
     borderWidth: 1,
     borderColor: "#cccccc",
   },
   paiementTitle: {
-    fontSize: 9,
+    fontSize: 7,
     fontFamily: "Helvetica-Bold",
     textTransform: "uppercase",
-    marginBottom: 6,
+    marginBottom: 4,
     borderBottomWidth: 1,
     borderBottomColor: "#000000",
-    paddingBottom: 3,
+    paddingBottom: 2,
   },
   paiementRow: {
     flexDirection: "row",
     justifyContent: "space-between",
-    paddingVertical: 3,
-    fontSize: 8,
+    paddingVertical: 2,
+    fontSize: 7,
   },
   paiementDate: {
     width: "25%",
@@ -236,77 +235,77 @@ const styles = StyleSheet.create({
     fontFamily: "Helvetica-Bold",
   },
 
-  // Conditions & Notes
+  // Conditions & Notes - COMPACT
   infoBox: {
-    marginBottom: 10,
-    padding: 8,
+    marginBottom: 6,
+    padding: 6,
     backgroundColor: "#f8f8f8",
     borderLeftWidth: 2,
     borderLeftColor: "#000000",
   },
   infoTitle: {
-    fontSize: 8,
+    fontSize: 7,
     fontFamily: "Helvetica-Bold",
     textTransform: "uppercase",
-    marginBottom: 4,
+    marginBottom: 3,
     letterSpacing: 0.5,
   },
   infoText: {
-    fontSize: 7,
-    lineHeight: 1.4,
+    fontSize: 6,
+    lineHeight: 1.3,
     color: "#333333",
   },
 
-  // Important notice box
+  // Important notice box - COMPACT
   noticeBox: {
-    marginBottom: 15,
-    padding: 10,
+    marginBottom: 8,
+    padding: 6,
     borderWidth: 2,
     borderColor: "#000000",
     backgroundColor: "#ffffff",
   },
   noticeText: {
-    fontSize: 8,
+    fontSize: 7,
     fontFamily: "Helvetica-Bold",
     textAlign: "center",
+  },
+
+  // Stamp section - COMPACT
+  stampSection: {
+    flexDirection: "row",
+    justifyContent: "flex-end",
+    marginTop: 6,
+    paddingTop: 6,
+  },
+  stampBox: {
+    width: "35%",
+    textAlign: "center",
+    borderWidth: 1,
+    borderColor: "#000000",
+    padding: 5,
+  },
+  stampLabel: {
+    fontSize: 7,
+    fontFamily: "Helvetica-Bold",
+    marginBottom: 15,
+  },
+  stampNote: {
+    fontSize: 6,
+    color: "#666666",
   },
 
   // Footer
   footer: {
     position: "absolute",
-    bottom: 20,
-    left: 30,
-    right: 30,
+    bottom: 15,
+    left: 25,
+    right: 25,
     textAlign: "center",
-    fontSize: 7,
+    fontSize: 6,
     color: "#999999",
     borderTopWidth: 0.5,
     borderTopColor: "#cccccc",
-    paddingTop: 6,
-  },
-
-  // Stamp section
-  stampSection: {
-    flexDirection: "row",
-    justifyContent: "flex-end",
-    marginTop: 10,
-    paddingTop: 10,
-  },
-  stampBox: {
-    width: "40%",
-    textAlign: "center",
-    borderWidth: 1,
-    borderColor: "#000000",
-    padding: 8,
-  },
-  stampLabel: {
-    fontSize: 8,
-    fontFamily: "Helvetica-Bold",
-    marginBottom: 25,
-  },
-  stampNote: {
-    fontSize: 7,
-    color: "#666666",
+    paddingTop: 4,
   },
 });
 
@@ -341,6 +340,11 @@ const FacturePDF = ({ facture, clientInfo }) => {
 
   const totalPaiements =
     facture.paiements?.reduce((sum, p) => sum + p.montant, 0) || 0;
+  const showPaymentHistory = facture.paiements && facture.paiements.length > 0;
+  const showConditions =
+    facture.conditions_paiement &&
+    facture.conditions_paiement.trim().length > 0;
+  const showNotes = facture.notes && facture.notes.trim().length > 0;
 
   return (
     <Document>
@@ -376,7 +380,7 @@ const FacturePDF = ({ facture, clientInfo }) => {
           </View>
         </View>
 
-        {/* Reference to Devis if exists */}
+        {/* Reference to Devis */}
         {facture.devis_id && (
           <View style={styles.referenceBox}>
             <Text style={styles.referenceText}>
@@ -479,8 +483,8 @@ const FacturePDF = ({ facture, clientInfo }) => {
           </View>
         </View>
 
-        {/* Payment History */}
-        {facture.paiements && facture.paiements.length > 0 && (
+        {/* Payment History - Only if payments exist */}
+        {showPaymentHistory && (
           <View style={styles.paiementsSection}>
             <Text style={styles.paiementTitle}>Historique des paiements</Text>
             <View style={styles.paiementRow}>
@@ -527,23 +531,23 @@ const FacturePDF = ({ facture, clientInfo }) => {
           </View>
         )}
 
-        {/* Payment Conditions */}
-        {facture.conditions_paiement && (
+        {/* Payment Conditions - Only if exists and not empty */}
+        {showConditions && (
           <View style={styles.infoBox}>
             <Text style={styles.infoTitle}>Conditions de Paiement</Text>
             <Text style={styles.infoText}>{facture.conditions_paiement}</Text>
           </View>
         )}
 
-        {/* Notes */}
-        {facture.notes && (
+        {/* Notes - Only if exists and not empty */}
+        {showNotes && (
           <View style={styles.infoBox}>
             <Text style={styles.infoTitle}>Notes</Text>
             <Text style={styles.infoText}>{facture.notes}</Text>
           </View>
         )}
 
-        {/* Payment Notice */}
+        {/* Payment Notice - Only if unpaid */}
         {facture.solde_a_payer > 0 && (
           <View style={styles.noticeBox}>
             <Text style={styles.noticeText}>

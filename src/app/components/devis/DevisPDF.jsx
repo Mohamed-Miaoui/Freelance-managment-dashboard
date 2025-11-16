@@ -1,239 +1,248 @@
 import React from "react";
 import { Document, Page, Text, View, StyleSheet } from "@react-pdf/renderer";
 
-// Professional black & white styles
+// Simpler, cleaner devis styles - more proposal-like
 const styles = StyleSheet.create({
   page: {
-    padding: 30,
-    fontSize: 9,
+    padding: 25,
+    fontSize: 8,
     fontFamily: "Helvetica",
     lineHeight: 1.3,
   },
-  // Header Section
+
+  // Header
   header: {
     flexDirection: "row",
     justifyContent: "space-between",
-    marginBottom: 20,
-    paddingBottom: 15,
-    borderBottomWidth: 2,
-    borderBottomColor: "#000000",
-  },
-  companyInfo: {
-    width: "50%",
+    marginBottom: 15,
+    paddingBottom: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: "#cccccc",
   },
   companyName: {
-    fontSize: 16,
+    fontSize: 14,
     fontFamily: "Helvetica-Bold",
-    marginBottom: 6,
-    letterSpacing: 0.5,
+    marginBottom: 10,
   },
-  companyDetails: {
-    fontSize: 8,
-    color: "#333333",
+  companyDetail: {
+    fontSize: 7,
+    color: "#666666",
     marginBottom: 1,
   },
-  devisSection: {
-    width: "45%",
+  devisBox: {
     textAlign: "right",
   },
   devisTitle: {
-    fontSize: 24,
+    fontSize: 22,
     fontFamily: "Helvetica-Bold",
+    color: "#333333",
     marginBottom: 20,
-    letterSpacing: 1,
   },
   devisNumber: {
-    fontSize: 11,
-    fontFamily: "Helvetica-Bold",
-    marginBottom: 4,
-  },
-  dateText: {
-    fontSize: 8,
-    color: "#333333",
-    marginBottom: 1,
+    fontSize: 9,
+    color: "#666666",
+    marginBottom: 2,
   },
 
   // Client Section
   clientSection: {
-    marginBottom: 18,
-    padding: 12,
-    backgroundColor: "#f8f8f8",
-    borderLeftWidth: 3,
-    borderLeftColor: "#000000",
+    marginBottom: 15,
   },
-  sectionTitle: {
-    fontSize: 8,
-    fontFamily: "Helvetica-Bold",
+  label: {
+    fontSize: 7,
+    color: "#999999",
+    marginBottom: 2,
     textTransform: "uppercase",
-    marginBottom: 6,
     letterSpacing: 0.5,
   },
   clientName: {
-    fontSize: 11,
+    fontSize: 10,
     fontFamily: "Helvetica-Bold",
-    marginBottom: 4,
+    marginBottom: 2,
   },
-  clientDetail: {
-    fontSize: 8,
-    color: "#333333",
+  clientInfo: {
+    fontSize: 7,
+    color: "#666666",
     marginBottom: 1,
   },
 
-  // Table
-  table: {
-    marginBottom: 15,
+  // Proposal Introduction
+  introSection: {
+    marginBottom: 12,
+    padding: 10,
+    backgroundColor: "#f9f9f9",
   },
-  tableHeader: {
-    flexDirection: "row",
-    borderBottomWidth: 2,
-    borderBottomColor: "#000000",
-    paddingVertical: 6,
-    backgroundColor: "#f0f0f0",
-  },
-  tableRow: {
-    flexDirection: "row",
-    borderBottomWidth: 0.5,
-    borderBottomColor: "#cccccc",
-    paddingVertical: 5,
-    minHeight: 20,
-  },
-  colDescription: {
-    width: "75%",
-    paddingRight: 8,
-  },
-  colAmount: {
-    width: "25%",
-    textAlign: "right",
-  },
-  tableHeaderText: {
+  introText: {
     fontSize: 8,
-    fontFamily: "Helvetica-Bold",
-    textTransform: "uppercase",
-  },
-  tableCellText: {
-    fontSize: 8,
-  },
-  tableCellAmount: {
-    fontSize: 8,
-    fontFamily: "Helvetica-Bold",
-  },
-
-  // Totals
-  totalsSection: {
-    marginLeft: "auto",
-    width: "45%",
-    marginBottom: 15,
-  },
-  totalRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    paddingVertical: 3,
-    borderBottomWidth: 0.5,
-    borderBottomColor: "#cccccc",
-  },
-  totalLabel: {
-    fontSize: 8,
+    lineHeight: 1.5,
     color: "#333333",
   },
-  totalValue: {
-    fontSize: 8,
-    fontFamily: "Helvetica-Bold",
+
+  // Services Section (No table, just clean list)
+  servicesSection: {
+    marginBottom: 12,
   },
-  grandTotalRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    paddingVertical: 8,
-    marginTop: 5,
-    backgroundColor: "#000000",
-    color: "#ffffff",
-    paddingHorizontal: 10,
-  },
-  grandTotalLabel: {
+  sectionTitle: {
     fontSize: 10,
     fontFamily: "Helvetica-Bold",
-    color: "#ffffff",
-  },
-  grandTotalValue: {
-    fontSize: 12,
-    fontFamily: "Helvetica-Bold",
-    color: "#ffffff",
-  },
-  acompteRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    paddingVertical: 5,
-    marginTop: 3,
-    paddingHorizontal: 8,
-    borderWidth: 1,
-    borderColor: "#000000",
-  },
-  acompteText: {
-    fontSize: 8,
-    fontFamily: "Helvetica-Bold",
-  },
-
-  // Conditions & Notes
-  infoBox: {
     marginBottom: 10,
-    padding: 8,
-    backgroundColor: "#f8f8f8",
-    borderLeftWidth: 2,
-    borderLeftColor: "#000000",
-  },
-  infoTitle: {
-    fontSize: 8,
-    fontFamily: "Helvetica-Bold",
     textTransform: "uppercase",
-    marginBottom: 4,
     letterSpacing: 0.5,
   },
-  infoText: {
+  serviceItem: {
+    marginBottom: 10,
+    paddingBottom: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: "#eeeeee",
+  },
+  serviceHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 3,
+  },
+  serviceName: {
+    fontSize: 9,
+    fontFamily: "Helvetica-Bold",
+    width: "75%",
+  },
+  servicePrice: {
+    fontSize: 9,
+    fontFamily: "Helvetica-Bold",
+    textAlign: "right",
+  },
+  serviceDescription: {
     fontSize: 7,
-    lineHeight: 1.4,
+    color: "#666666",
+    lineHeight: 1.3,
+    marginTop: 2,
+  },
+
+  // Summary Box
+  summaryBox: {
+    marginTop: 10,
+    marginLeft: "auto",
+    width: "50%",
+    padding: 12,
+    backgroundColor: "#f5f5f5",
+  },
+  summaryRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginBottom: 5,
+  },
+  summaryLabel: {
+    fontSize: 8,
+    color: "#666666",
+  },
+  summaryValue: {
+    fontSize: 8,
+    fontFamily: "Helvetica-Bold",
+  },
+  summaryTotal: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginTop: 6,
+    paddingTop: 6,
+    borderTopWidth: 2,
+    borderTopColor: "#333333",
+  },
+  totalLabel: {
+    fontSize: 11,
+    fontFamily: "Helvetica-Bold",
+  },
+  totalValue: {
+    fontSize: 12,
+    fontFamily: "Helvetica-Bold",
+  },
+  depositBox: {
+    marginTop: 6,
+    padding: 6,
+    backgroundColor: "#ffffff",
+    borderWidth: 1,
+    borderColor: "#cccccc",
+  },
+  depositText: {
+    fontSize: 7,
+    textAlign: "center",
     color: "#333333",
   },
 
-  // Signatures
+  // Terms & Conditions
+  termsSection: {
+    marginTop: 12,
+    padding: 10,
+    backgroundColor: "#f9f9f9",
+  },
+  termsTitle: {
+    fontSize: 8,
+    fontFamily: "Helvetica-Bold",
+    marginBottom: 5,
+    textTransform: "uppercase",
+  },
+  termsList: {
+    fontSize: 7,
+    lineHeight: 1.4,
+    color: "#666666",
+  },
+
+  // Validity Notice
+  validityBox: {
+    marginTop: 10,
+    padding: 8,
+    borderWidth: 1,
+    borderColor: "#cccccc",
+    textAlign: "center",
+  },
+  validityText: {
+    fontSize: 7,
+    color: "#666666",
+  },
+
+  // Signature
   signatureSection: {
-    flexDirection: "row",
-    justifyContent: "space-between",
     marginTop: 15,
     paddingTop: 12,
     borderTopWidth: 1,
-    borderTopColor: "#000000",
+    borderTopColor: "#cccccc",
+  },
+  signatureText: {
+    fontSize: 7,
+    color: "#666666",
+    marginBottom: 20,
+    textAlign: "center",
+  },
+  signatureBoxes: {
+    flexDirection: "row",
+    justifyContent: "space-between",
   },
   signatureBox: {
     width: "45%",
-    textAlign: "center",
   },
   signatureLabel: {
-    fontSize: 8,
+    fontSize: 7,
     fontFamily: "Helvetica-Bold",
     marginBottom: 25,
   },
   signatureLine: {
     borderTopWidth: 1,
-    borderTopColor: "#000000",
+    borderTopColor: "#333333",
     paddingTop: 3,
-    marginTop: 5,
   },
   signatureNote: {
-    fontSize: 7,
-    color: "#666666",
+    fontSize: 6,
+    color: "#999999",
   },
 
   // Footer
   footer: {
     position: "absolute",
-    bottom: 20,
-    left: 30,
-    right: 30,
-    textAlign: "center",
-    fontSize: 7,
+    bottom: 15,
+    left: 25,
+    right: 25,
+    fontSize: 6,
     color: "#999999",
-    borderTopWidth: 0.5,
-    borderTopColor: "#cccccc",
-    paddingTop: 6,
+    textAlign: "center",
   },
 });
 
@@ -241,7 +250,7 @@ const DevisPDF = ({ devis, clientInfo }) => {
   const formatDate = (dateString) => {
     return new Date(dateString).toLocaleDateString("fr-FR", {
       day: "2-digit",
-      month: "2-digit",
+      month: "long",
       year: "numeric",
     });
   };
@@ -258,136 +267,155 @@ const DevisPDF = ({ devis, clientInfo }) => {
       <Page size="A4" style={styles.page}>
         {/* Header */}
         <View style={styles.header}>
-          <View style={styles.companyInfo}>
+          <View>
             <Text style={styles.companyName}>{clientInfo.nom}</Text>
-            <Text style={styles.companyDetails}>{clientInfo.adresse}</Text>
-            <Text style={styles.companyDetails}>
+            <Text style={styles.companyDetail}>{clientInfo.adresse}</Text>
+            <Text style={styles.companyDetail}>
               Tél: {clientInfo.telephone}
             </Text>
-            <Text style={styles.companyDetails}>Email: {clientInfo.email}</Text>
-            <Text style={styles.companyDetails}>
+            <Text style={styles.companyDetail}>Email: {clientInfo.email}</Text>
+            <Text style={styles.companyDetail}>
               M.F: {clientInfo.matricule_fiscal}
             </Text>
           </View>
 
-          <View style={styles.devisSection}>
+          <View style={styles.devisBox}>
             <Text style={styles.devisTitle}>DEVIS</Text>
             <Text style={styles.devisNumber}>N° {devis.numero}</Text>
-            <Text style={styles.dateText}>
-              Date: {formatDate(devis.date_emission)}
-            </Text>
-            <Text style={styles.dateText}>
-              Validité: {formatDate(devis.date_validite)}
+            <Text style={styles.devisNumber}>
+              {formatDate(devis.date_emission)}
             </Text>
           </View>
         </View>
 
-        {/* Client Info */}
+        {/* Client */}
         <View style={styles.clientSection}>
-          <Text style={styles.sectionTitle}>Destinataire</Text>
+          <Text style={styles.label}>Devis établi pour</Text>
           <Text style={styles.clientName}>{devis.client_id?.nom}</Text>
-          <Text style={styles.clientDetail}>{devis.client_id?.adresse}</Text>
-          <Text style={styles.clientDetail}>
+          <Text style={styles.clientInfo}>{devis.client_id?.adresse}</Text>
+          <Text style={styles.clientInfo}>{devis.client_id?.email}</Text>
+          <Text style={styles.clientInfo}>
             Tél: {devis.client_id?.telephone}
           </Text>
-          <Text style={styles.clientDetail}>
-            Email: {devis.client_id?.email}
-          </Text>
-          <Text style={styles.clientDetail}>
-            M.F: {devis.client_id?.matricule_fiscal}
+        </View>
+
+        {/* Introduction (Optional) */}
+        <View style={styles.introSection}>
+          <Text style={styles.introText}>
+            Suite à votre demande, nous avons le plaisir de vous proposer notre
+            offre pour la réalisation de votre projet. Ce devis détaille
+            l'ensemble des prestations et leur tarification.
           </Text>
         </View>
 
-        {/* Items Table */}
-        <View style={styles.table}>
-          <View style={styles.tableHeader}>
-            <Text style={[styles.colDescription, styles.tableHeaderText]}>
-              Description
-            </Text>
-            <Text style={[styles.colAmount, styles.tableHeaderText]}>
-              Montant (TND)
-            </Text>
-          </View>
+        {/* Services - Clean List Format */}
+        <View style={styles.servicesSection}>
+          <Text style={styles.sectionTitle}>Prestations Proposées</Text>
+
           {devis.lignes?.map((ligne, index) => (
-            <View key={index} style={styles.tableRow}>
-              <Text style={[styles.colDescription, styles.tableCellText]}>
-                {ligne.description}
-              </Text>
-              <Text style={[styles.colAmount, styles.tableCellAmount]}>
-                {formatCurrency(ligne.montant)}
-              </Text>
+            <View key={index} style={styles.serviceItem}>
+              <View style={styles.serviceHeader}>
+                <Text style={styles.serviceName}>
+                  {index + 1}. {ligne.description.split("-")[0].trim()}
+                </Text>
+                <Text style={styles.servicePrice}>
+                  {formatCurrency(ligne.montant)} TND
+                </Text>
+              </View>
+              {ligne.description.includes("-") && (
+                <Text style={styles.serviceDescription}>
+                  {ligne.description.split("-").slice(1).join("-").trim()}
+                </Text>
+              )}
             </View>
           ))}
         </View>
 
-        {/* Totals */}
-        <View style={styles.totalsSection}>
-          <View style={styles.totalRow}>
-            <Text style={styles.totalLabel}>Montant HT:</Text>
-            <Text style={styles.totalValue}>
+        {/* Summary */}
+        <View style={styles.summaryBox}>
+          <View style={styles.summaryRow}>
+            <Text style={styles.summaryLabel}>Sous-total HT</Text>
+            <Text style={styles.summaryValue}>
               {formatCurrency(devis.montant_ht)} TND
             </Text>
           </View>
-          <View style={styles.totalRow}>
-            <Text style={styles.totalLabel}>TVA ({devis.tva}%):</Text>
-            <Text style={styles.totalValue}>
+
+          <View style={styles.summaryRow}>
+            <Text style={styles.summaryLabel}>TVA ({devis.tva}%)</Text>
+            <Text style={styles.summaryValue}>
               {formatCurrency((devis.montant_ht * devis.tva) / 100)} TND
             </Text>
           </View>
-          <View style={styles.totalRow}>
-            <Text style={styles.totalLabel}>Timbre Fiscal:</Text>
-            <Text style={styles.totalValue}>
+
+          <View style={styles.summaryRow}>
+            <Text style={styles.summaryLabel}>Timbre Fiscal</Text>
+            <Text style={styles.summaryValue}>
               {formatCurrency(devis.timbre_fiscal)} TND
             </Text>
           </View>
 
-          <View style={styles.grandTotalRow}>
-            <Text style={styles.grandTotalLabel}>TOTAL TTC</Text>
-            <Text style={styles.grandTotalValue}>
+          <View style={styles.summaryTotal}>
+            <Text style={styles.totalLabel}>MONTANT TOTAL</Text>
+            <Text style={styles.totalValue}>
               {formatCurrency(devis.montant_ttc)} TND
             </Text>
           </View>
 
           {devis.montant_acompte > 0 && (
-            <View style={styles.acompteRow}>
-              <Text style={styles.acompteText}>Acompte demandé:</Text>
-              <Text style={styles.acompteText}>
-                {formatCurrency(devis.montant_acompte)} TND
+            <View style={styles.depositBox}>
+              <Text style={styles.depositText}>
+                Acompte requis: {formatCurrency(devis.montant_acompte)} TND (
+                {((devis.montant_acompte / devis.montant_ttc) * 100).toFixed(0)}
+                %)
               </Text>
             </View>
           )}
         </View>
 
-        {/* Payment Conditions */}
+        {/* Terms */}
         {devis.conditions_paiement && (
-          <View style={styles.infoBox}>
-            <Text style={styles.infoTitle}>Conditions de Paiement</Text>
-            <Text style={styles.infoText}>{devis.conditions_paiement}</Text>
+          <View style={styles.termsSection}>
+            <Text style={styles.termsTitle}>Conditions de Paiement</Text>
+            <Text style={styles.termsList}>{devis.conditions_paiement}</Text>
           </View>
         )}
 
         {/* Notes */}
         {devis.notes && (
-          <View style={styles.infoBox}>
-            <Text style={styles.infoTitle}>Notes</Text>
-            <Text style={styles.infoText}>{devis.notes}</Text>
+          <View style={styles.termsSection}>
+            <Text style={styles.termsTitle}>Informations Complémentaires</Text>
+            <Text style={styles.termsList}>{devis.notes}</Text>
           </View>
         )}
 
-        {/* Signatures */}
-        <View style={styles.signatureSection}>
-          <View style={styles.signatureBox}>
-            <Text style={styles.signatureLabel}>LE PRESTATAIRE</Text>
-            <View style={styles.signatureLine}>
-              <Text style={styles.signatureNote}>Signature & Cachet</Text>
-            </View>
-          </View>
+        {/* Validity */}
+        <View style={styles.validityBox}>
+          <Text style={styles.validityText}>
+            Ce devis est valable jusqu'au {formatDate(devis.date_validite)}
+          </Text>
+        </View>
 
-          <View style={styles.signatureBox}>
-            <Text style={styles.signatureLabel}>LE CLIENT</Text>
-            <Text style={styles.signatureNote}>(Bon pour accord)</Text>
-            <View style={styles.signatureLine}>
-              <Text style={styles.signatureNote}>Signature & Date</Text>
+        {/* Signature */}
+        <View style={styles.signatureSection}>
+          <Text style={styles.signatureText}>
+            Pour acceptation, merci de retourner ce devis signé et daté
+          </Text>
+
+          <View style={styles.signatureBoxes}>
+            <View style={styles.signatureBox}>
+              <Text style={styles.signatureLabel}>Le Prestataire</Text>
+              <View style={styles.signatureLine}>
+                <Text style={styles.signatureNote}>Signature</Text>
+              </View>
+            </View>
+
+            <View style={styles.signatureBox}>
+              <Text style={styles.signatureLabel}>
+                Le Client (Bon pour accord)
+              </Text>
+              <View style={styles.signatureLine}>
+                <Text style={styles.signatureNote}>Date et Signature</Text>
+              </View>
             </View>
           </View>
         </View>

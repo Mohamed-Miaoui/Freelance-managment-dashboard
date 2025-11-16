@@ -5,7 +5,7 @@ import dbConnect from "@/app/utils/dbConnect";
 export async function POST(req, { params }) {
   try {
     await dbConnect();
-    const { id } = params;
+    const { id } =await  params;
     const payment = await req.json();
 
     const facture = await Facture.findById(id);
