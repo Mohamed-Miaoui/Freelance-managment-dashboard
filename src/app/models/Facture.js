@@ -2,8 +2,8 @@ import mongoose from 'mongoose';
 
 const LigneSchema = new mongoose.Schema({
   description: { type: String, required: true },
-  quantite: { type: Number, required: true },
-  prix_unitaire: { type: Number, required: true },
+  // quantite: { type: Number, required: true },
+  // prix_unitaire: { type: Number, required: true },
   montant: { type: Number, required: true }
 }, { _id: false });
 

@@ -14,12 +14,16 @@ import {
   FileQuestion,
   Printer,
   Download,
+  FileCheck,
 } from "lucide-react";
 import { useFormik } from "formik";
 import axios from "axios";
-import DevisPrintModal from "@/app/components/DevisPrintModal";
+import DevisPrintModal from "@/app/components/devis/DevisPrintModal";
+import { useRouter } from "next/navigation";
 
 const devis = () => {
+  const router = useRouter();
+
   const [clients, setClients] = useState([]);
   const [devis, setDevis] = useState([]);
   const [theme, setTheme] = useState("light");
@@ -125,6 +129,7 @@ const devis = () => {
     fetchClients();
     fetchDevis();
   }, []);
+
   const handleSubmitDevis = async (values) => {
     try {
       const newDevis = await axios.post("/api/devis", values);
@@ -195,6 +200,74 @@ const devis = () => {
         console.error("Error deleting devis:", error);
         alert("Erreur lors de la suppression du devis");
       }
+    }
+  };
+
+  //convert to facture
+  const handleConvertToFacture = async (devis) => {
+    try {
+      // Check if invoice already exists for this devis
+      const existingFacture = await axios.get(
+        `/api/facture?devis_id=${devis._id}`
+      );
+      if (existingFacture.data.length > 0) {
+        if (
+          confirm("Une facture existe déjà pour ce devis. Voulez-vous la voir?")
+        ) {
+          router.push(`/invoices?highlight=${existingFacture.data[0]._id}`);
+        }
+        return;
+      }
+
+      // Confirm conversion
+      if (!confirm(`Convertir le devis ${devis.numero} en facture?`)) {
+        return;
+      }
+
+      // Generate invoice number
+      const year = new Date().getFullYear();
+      const response = await axios.get("/api/facture/count");
+      const count = response.data.count;
+      const factureNumero = `FAC-${year}-${String(count + 1).padStart(3, "0")}`;
+
+      // Calculate due date (30 days from now by default)
+      const dateEcheance = new Date();
+      dateEcheance.setDate(dateEcheance.getDate() + 30);
+
+      // Create invoice from devis
+      const factureData = {
+        devis_id: devis._id,
+        client_id:
+          typeof devis.client_id === "object"
+            ? devis.client_id._id
+            : devis.client_id,
+        numero: factureNumero,
+        date_emission: new Date().toISOString().split("T")[0],
+        date_echeance: dateEcheance.toISOString().split("T")[0],
+        statut: "en_attente",
+        montant_ht: devis.montant_ht,
+        tva: devis.tva,
+        timbre_fiscal: devis.timbre_fiscal || 0.6,
+        montant_ttc: devis.montant_ttc,
+        acompte: devis.montant_acompte || 0,
+        conditions_paiement: devis.conditions_paiement || "",
+        notes: `Facture générée depuis le devis ${devis.numero}`,
+        lignes: devis.lignes || [],
+        paiements: [],
+      };
+
+      const newFacture = await axios.post("/api/facture", factureData);
+
+      if (newFacture) {
+        alert(`Facture ${factureNumero} créée avec succès!`);
+        router.push(`/invoices?highlight=${newFacture.data._id}`);
+      }
+    } catch (error) {
+      console.error("Error converting to facture:", error);
+      alert(
+        "Erreur lors de la conversion: " +
+          (error.response?.data?.error || error.message)
+      );
     }
   };
 
@@ -509,6 +582,14 @@ const devis = () => {
                           className={`${currentTheme.textSecondary} hover:text-blue-600 mr-3 cursor-pointer transition-all duration-200 ease-in-out hover:scale-110`}
                         >
                           <Edit2 size={18} />
+                        </button>
+                        <button
+                          onClick={() => handleConvertToFacture(dev)}
+                          className={`${currentTheme.textSecondary} hover:text-purple-600 mr-3 transition-colors`}
+                          title="Convertir en facture"
+                          hidden={dev.statut !== "accepte"}
+                        >
+                          <FileCheck size={18} />
                         </button>
                         <button
                           onClick={() => handleDelete(dev._id)}

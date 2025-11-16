@@ -1,61 +1,130 @@
 "use client";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   Plus,
   FileText,
   DollarSign,
   Clock,
-  AlertCircle,
+  CheckCircle,
   Search,
-  Edit2,
-  Trash2,
-  X,
   Eye,
+  Trash2,
+  Download,
+  CreditCard,
 } from "lucide-react";
+import axios from "axios";
+import { useRouter, useSearchParams } from "next/navigation";
+import FacturePrintModal from "@/app/components/facture/FacturePrintModal";
 
-const invoices = () => {
+const Factures = () => {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const highlightId = searchParams.get("highlight");
+
+  const [factures, setFactures] = useState([]);
   const [theme, setTheme] = useState("light");
-  const [invoices, setInvoices] = useState([
-    {
-      id: "INV-2024-001",
-      clientName: "John Doe",
-      amount: 2500,
-      dueDate: "2024-11-15",
-      status: "Paid",
-    },
-    {
-      id: "INV-2024-002",
-      clientName: "Jane Smith",
-      amount: 4200,
-      dueDate: "2024-11-20",
-      status: "Pending",
-    },
-    {
-      id: "INV-2024-003",
-      clientName: "Mike Johnson",
-      amount: 1500,
-      dueDate: "2024-10-25",
-      status: "Overdue",
-    },
-    {
-      id: "INV-2024-004",
-      clientName: "Jane Smith",
-      amount: 7800,
-      dueDate: "2024-12-01",
-      status: "Pending",
-    },
-  ]);
-
-  const [showModal, setShowModal] = useState(false);
-  const [editingInvoice, setEditingInvoice] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
-  const [formData, setFormData] = useState({
-    clientName: "",
-    amount: "",
-    dueDate: "",
-    status: "Pending",
-  });
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
+  const [selectedFacture, setSelectedFacture] = useState(null);
+  const [paymentAmount, setPaymentAmount] = useState("");
+  const [paymentMode, setPaymentMode] = useState("virement");
+  const [paymentReference, setPaymentReference] = useState("");
+  const [paymentNotes, setPaymentNotes] = useState("");
+  const [printFacture, setPrintFacture] = useState(null);
+
+  const STATUS_OPTIONS = [
+    { value: "en_attente", label: "En Attente" },
+    { value: "payee", label: "Payée" },
+    { value: "en_retard", label: "En Retard" },
+  ];
+
+  const PAYMENT_MODES = [
+    { value: "virement", label: "Virement" },
+    { value: "especes", label: "Espèces" },
+    { value: "cheque", label: "Chèque" },
+    { value: "autre", label: "Autre" },
+  ];
+  const companyInfo = {
+    nom: "FreelancePro",
+    adresse: "123 Avenue de la Liberté, Tunis 1002, Tunisie",
+    telephone: "+216 71 234 567",
+    email: "contact@freelancepro.tn",
+    matricule_fiscal: "1234567/B/M/000",
+  };
+
+  const fetchFactures = async () => {
+    try {
+      const response = await axios.get("/api/facture");
+      setFactures(response.data);
+
+      // Highlight newly created invoice
+      if (highlightId) {
+        setTimeout(() => {
+          const element = document.getElementById(`facture-${highlightId}`);
+          if (element) {
+            element.scrollIntoView({ behavior: "smooth", block: "center" });
+            element.classList.add("bg-yellow-100");
+            setTimeout(() => element.classList.remove("bg-yellow-100"), 2000);
+          }
+        }, 100);
+      }
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
+  useEffect(() => {
+    fetchFactures();
+  }, []);
+
+  const handleAddPayment = (facture) => {
+    setSelectedFacture(facture);
+    setPaymentAmount(facture.solde_a_payer?.toString() || "");
+    setShowPaymentModal(true);
+  };
+
+  const submitPayment = async () => {
+    if (!paymentAmount || parseFloat(paymentAmount) <= 0) {
+      alert("Veuillez entrer un montant valide");
+      return;
+    }
+
+    try {
+      const payment = {
+        montant: parseFloat(paymentAmount),
+        date_paiement: new Date().toISOString(),
+        mode_paiement: paymentMode,
+        reference: paymentReference,
+        notes: paymentNotes,
+      };
+
+      await axios.post(`/api/facture/${selectedFacture._id}/payment`, payment);
+
+      setShowPaymentModal(false);
+      setPaymentAmount("");
+      setPaymentReference("");
+      setPaymentNotes("");
+      fetchFactures();
+      alert("Paiement enregistré avec succès!");
+    } catch (error) {
+      console.error("Error adding payment:", error);
+      alert("Erreur lors de l'ajout du paiement");
+    }
+  };
+
+  const handleDelete = async (id) => {
+    if (confirm("Êtes-vous sûr de vouloir supprimer ce facture?")) {
+      try {
+        await axios.delete(`/api/facture/${id}`);
+        fetchDevis();
+        alert("facture supprimé avec succès");
+      } catch (error) {
+        console.error("Error deleting facture:", error);
+        alert("Erreur lors de la suppression du devis");
+      }
+    }
+  };
 
   const themes = {
     light: {
@@ -67,135 +136,74 @@ const invoices = () => {
       hover: "hover:bg-gray-50",
       primary: "bg-blue-600 hover:bg-blue-700",
     },
-    dark: {
-      bg: "bg-gray-900",
-      card: "bg-gray-800",
-      text: "text-white",
-      textSecondary: "text-gray-400",
-      border: "border-gray-700",
-      hover: "hover:bg-gray-700",
-      primary: "bg-blue-600 hover:bg-blue-700",
-    },
   };
 
   const currentTheme = themes[theme];
 
-  const getNextInvoiceId = () => {
-    const lastId =
-      invoices.length > 0
-        ? parseInt(invoices[invoices.length - 1].id.split("-")[2])
-        : 0;
-    return `INV-2024-${(lastId + 1).toString().padStart(3, "0")}`;
-  };
+  const filteredFactures = factures.filter((f) => {
+    if (!f) return false;
+    const search = searchTerm.toLowerCase().trim();
+    let matchesSearch = true;
 
-  const handleSubmit = () => {
-    if (!formData.clientName || !formData.amount || !formData.dueDate) {
-      alert("Please fill all fields");
-      return;
+    if (search !== "") {
+      const numeroMatch = f.numero?.toLowerCase().includes(search) || false;
+      const clientName =
+        typeof f.client_id === "object" ? f.client_id?.nom : "";
+      const clientMatch = clientName?.toLowerCase().includes(search) || false;
+      matchesSearch = numeroMatch || clientMatch;
     }
 
-    if (editingInvoice) {
-      setInvoices(
-        invoices.map((inv) =>
-          inv.id === editingInvoice.id
-            ? {
-                ...editingInvoice,
-                ...formData,
-                amount: parseFloat(formData.amount),
-              }
-            : inv
-        )
-      );
-    } else {
-      setInvoices([
-        ...invoices,
-        {
-          ...formData,
-          id: getNextInvoiceId(),
-          amount: parseFloat(formData.amount),
-        },
-      ]);
-    }
-    resetForm();
-  };
-
-  const resetForm = () => {
-    setFormData({ clientName: "", amount: "", dueDate: "", status: "Pending" });
-    setEditingInvoice(null);
-    setShowModal(false);
-  };
-
-  const handleEdit = (invoice) => {
-    setFormData({
-      clientName: invoice.clientName,
-      amount: invoice.amount.toString(),
-      dueDate: invoice.dueDate,
-      status: invoice.status,
-    });
-    setEditingInvoice(invoice);
-    setShowModal(true);
-  };
-
-  const handleDelete = (id) => {
-    if (confirm("Are you sure you want to delete this invoice?")) {
-      setInvoices(invoices.filter((inv) => inv.id !== id));
-    }
-  };
-
-  const filteredInvoices = invoices.filter(
-    (inv) =>
-      (inv.clientName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        inv.id.toLowerCase().includes(searchTerm.toLowerCase())) &&
-      (statusFilter === "all" || inv.status === statusFilter)
-  );
-
-  const invoiceStats = [
-    {
-      label: "Total Invoices",
-      value: invoices.length,
-      icon: FileText,
-      color: "text-blue-600",
-    },
-    {
-      label: "Total Billed",
-      value: `$${invoices
-        .reduce((sum, inv) => sum + inv.amount, 0)
-        .toLocaleString()}`,
-      icon: DollarSign,
-      color: "text-green-600",
-    },
-    {
-      label: "Pending Amount",
-      value: `$${invoices
-        .filter((inv) => inv.status === "Pending")
-        .reduce((sum, inv) => sum + inv.amount, 0)
-        .toLocaleString()}`,
-      icon: Clock,
-      color: "text-yellow-600",
-    },
-    {
-      label: "Overdue",
-      value: `$${invoices
-        .filter((inv) => inv.status === "Overdue")
-        .reduce((sum, inv) => sum + inv.amount, 0)
-        .toLocaleString()}`,
-      icon: AlertCircle,
-      color: "text-red-600",
-    },
-  ];
+    const matchesStatus = statusFilter === "all" || f.statut === statusFilter;
+    return matchesSearch && matchesStatus;
+  });
 
   const getStatusColor = (status) => {
     switch (status) {
-      case "Paid":
+      case "payee":
         return "bg-green-100 text-green-700";
-      case "Pending":
+      case "en_attente":
         return "bg-yellow-100 text-yellow-700";
-      case "Overdue":
+      case "en_retard":
         return "bg-red-100 text-red-700";
       default:
         return "bg-gray-100 text-gray-700";
     }
   };
+
+  const totalRevenu = factures
+    .filter((f) => f.statut === "payee")
+    .reduce((sum, f) => sum + f.montant_ttc, 0);
+
+  const totalEnAttente = factures
+    .filter((f) => f.statut !== "payee")
+    .reduce((sum, f) => sum + (f.solde_a_payer || f.montant_ttc), 0);
+
+  const factureStats = [
+    {
+      label: "Total Factures",
+      value: factures.length,
+      icon: FileText,
+      color: "text-blue-600",
+    },
+    {
+      label: "Payées",
+      value: factures.filter((f) => f.statut === "payee").length,
+      icon: CheckCircle,
+      color: "text-green-600",
+    },
+    {
+      label: "Revenu Total",
+      value: `${totalRevenu.toFixed(3)} TND`,
+      icon: DollarSign,
+      color: "text-green-600",
+    },
+    {
+      label: "À Recevoir",
+      value: `${totalEnAttente.toFixed(3)} TND`,
+      icon: Clock,
+      color: "text-orange-600",
+    },
+  ];
 
   return (
     <div
@@ -204,7 +212,7 @@ const invoices = () => {
       <div className="ml-64 p-8">
         {/* Stats */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          {invoiceStats.map((stat, idx) => (
+          {factureStats.map((stat, idx) => (
             <div
               key={idx}
               className={`${currentTheme.card} rounded-xl p-6 shadow-sm border ${currentTheme.border} transition-all hover:shadow-md`}
@@ -242,7 +250,7 @@ const invoices = () => {
                 />
                 <input
                   type="text"
-                  placeholder="Search by client or invoice ID..."
+                  placeholder="Rechercher par numéro ou client..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className={`w-full pl-10 pr-4 py-2 border ${currentTheme.border} rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${currentTheme.card} ${currentTheme.text}`}
@@ -255,229 +263,254 @@ const invoices = () => {
                 onChange={(e) => setStatusFilter(e.target.value)}
                 className={`px-4 py-2 border ${currentTheme.border} rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${currentTheme.card} ${currentTheme.text}`}
               >
-                <option value="all">All Status</option>
-                <option value="Paid">Paid</option>
-                <option value="Pending">Pending</option>
-                <option value="Overdue">Overdue</option>
+                <option value="all">Tous les statuts</option>
+                {STATUS_OPTIONS.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
               </select>
-              <button
-                onClick={() => setShowModal(true)}
-                className={`flex items-center gap-2 px-6 py-2 ${currentTheme.primary} text-white rounded-lg font-medium transition-all hover:shadow-lg`}
-              >
-                <Plus strokeWidth={1} size={20} />
-                Create Invoice
-              </button>
             </div>
           </div>
         </div>
 
-        {/* Invoices Table */}
-        <div
-          className={`${currentTheme.card} rounded-xl shadow-sm border ${currentTheme.border} overflow-hidden`}
-        >
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead
-                className={`${
-                  currentTheme.bg === "bg-gray-50"
-                    ? "bg-gray-50"
-                    : "bg-gray-700"
-                }`}
-              >
-                <tr>
-                  <th
-                    className={`px-6 py-4 text-left text-xs font-semibold ${currentTheme.text} uppercase tracking-wider`}
-                  >
-                    Invoice ID
-                  </th>
-                  <th
-                    className={`px-6 py-4 text-left text-xs font-semibold ${currentTheme.text} uppercase tracking-wider`}
-                  >
-                    Client
-                  </th>
-                  <th
-                    className={`px-6 py-4 text-left text-xs font-semibold ${currentTheme.text} uppercase tracking-wider`}
-                  >
-                    Amount
-                  </th>
-                  <th
-                    className={`px-6 py-4 text-left text-xs font-semibold ${currentTheme.text} uppercase tracking-wider`}
-                  >
-                    Due Date
-                  </th>
-                  <th
-                    className={`px-6 py-4 text-left text-xs font-semibold ${currentTheme.text} uppercase tracking-wider`}
-                  >
-                    Status
-                  </th>
-                  <th
-                    className={`px-6 py-4 text-right text-xs font-semibold ${currentTheme.text} uppercase tracking-wider`}
-                  >
-                    Actions
-                  </th>
-                </tr>
-              </thead>
-              <tbody className={`divide-y ${currentTheme.border}`}>
-                {filteredInvoices.map((invoice) => (
-                  <tr
-                    key={invoice.id}
-                    className={`${currentTheme.hover} transition-colors`}
-                  >
-                    <td
-                      className={`px-6 py-4 whitespace-nowrap font-medium ${currentTheme.text}`}
+        {/* Factures Table */}
+        {filteredFactures.length > 0 ? (
+          <div
+            className={`${currentTheme.card} rounded-xl shadow-sm border ${currentTheme.border} overflow-hidden`}
+          >
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead className="bg-gray-50">
+                  <tr>
+                    <th
+                      className={`px-6 py-4 text-left text-xs font-semibold ${currentTheme.text} uppercase tracking-wider`}
                     >
-                      {invoice.id}
-                    </td>
-                    <td
-                      className={`px-6 py-4 whitespace-nowrap text-sm ${currentTheme.textSecondary}`}
+                      Numéro
+                    </th>
+                    <th
+                      className={`px-6 py-4 text-left text-xs font-semibold ${currentTheme.text} uppercase tracking-wider`}
                     >
-                      {invoice.clientName}
-                    </td>
-                    <td
-                      className={`px-6 py-4 whitespace-nowrap text-sm font-semibold ${currentTheme.text}`}
+                      Client
+                    </th>
+                    <th
+                      className={`px-6 py-4 text-left text-xs font-semibold ${currentTheme.text} uppercase tracking-wider`}
                     >
-                      ${invoice.amount.toLocaleString()}
-                    </td>
-                    <td
-                      className={`px-6 py-4 whitespace-nowrap text-sm ${currentTheme.textSecondary}`}
+                      Montant TTC
+                    </th>
+                    <th
+                      className={`px-6 py-4 text-left text-xs font-semibold ${currentTheme.text} uppercase tracking-wider`}
                     >
-                      {invoice.dueDate}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <span
-                        className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(
-                          invoice.status
-                        )}`}
-                      >
-                        {invoice.status}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-right text-sm">
-                      <button
-                        className={`${currentTheme.textSecondary} hover:text-blue-600 mr-3 transition-colors`}
-                      >
-                        <Eye size={18} />
-                      </button>
-                      <button
-                        onClick={() => handleEdit(invoice)}
-                        className={`${currentTheme.textSecondary} hover:text-blue-600 mr-3 transition-colors`}
-                      >
-                        <Edit2 size={18} />
-                      </button>
-                      <button
-                        onClick={() => handleDelete(invoice.id)}
-                        className={`${currentTheme.textSecondary} hover:text-red-600 transition-colors`}
-                      >
-                        <Trash2 size={18} />
-                      </button>
-                    </td>
+                      Solde
+                    </th>
+                    <th
+                      className={`px-6 py-4 text-left text-xs font-semibold ${currentTheme.text} uppercase tracking-wider`}
+                    >
+                      Échéance
+                    </th>
+                    <th
+                      className={`px-6 py-4 text-left text-xs font-semibold ${currentTheme.text} uppercase tracking-wider`}
+                    >
+                      Statut
+                    </th>
+                    <th
+                      className={`px-6 py-4 text-right text-xs font-semibold ${currentTheme.text} uppercase tracking-wider`}
+                    >
+                      Actions
+                    </th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody className={`divide-y ${currentTheme.border}`}>
+                  {filteredFactures.map((facture) => (
+                    <tr
+                      key={facture._id}
+                      id={`facture-${facture._id}`}
+                      className={`${currentTheme.hover} transition-all duration-500`}
+                    >
+                      <td
+                        className={`px-6 py-4 whitespace-nowrap font-medium ${currentTheme.text}`}
+                      >
+                        {facture.numero}
+                        {facture.devis_id && (
+                          <span className="ml-2 text-xs text-gray-500">
+                            (Devis: {facture.devis_id.numero})
+                          </span>
+                        )}
+                      </td>
+                      <td
+                        className={`px-6 py-4 whitespace-nowrap text-sm ${currentTheme.textSecondary}`}
+                      >
+                        {facture.client_id?.nom || "N/A"}
+                      </td>
+                      <td
+                        className={`px-6 py-4 whitespace-nowrap text-sm font-semibold ${currentTheme.text}`}
+                      >
+                        {facture.montant_ttc?.toFixed(3)} TND
+                      </td>
+                      <td
+                        className={`px-6 py-4 whitespace-nowrap text-sm font-semibold ${
+                          facture.solde_a_payer > 0
+                            ? "text-red-600"
+                            : "text-green-600"
+                        }`}
+                      >
+                        {facture.solde_a_payer?.toFixed(3)} TND
+                      </td>
+                      <td
+                        className={`px-6 py-4 whitespace-nowrap text-sm ${currentTheme.textSecondary}`}
+                      >
+                        {new Date(facture.date_echeance).toLocaleDateString(
+                          "fr-FR"
+                        )}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <span
+                          className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(
+                            facture.statut
+                          )}`}
+                        >
+                          {
+                            STATUS_OPTIONS.find(
+                              (opt) => opt.value === facture.statut
+                            )?.label
+                          }
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-right text-sm">
+                        {facture.statut !== "payee" && (
+                          <button
+                            onClick={() => handleAddPayment(facture)}
+                            className={`${currentTheme.textSecondary} hover:text-green-600 mr-3 transition-colors`}
+                            title="Ajouter un paiement"
+                          >
+                            <CreditCard size={18} />
+                          </button>
+                        )}
+                        <button
+                          onClick={() => setPrintFacture(facture)}
+                          className={`${currentTheme.textSecondary} hover:text-green-600 mr-3 transition-colors`}
+                          title="Télécharger PDF"
+                        >
+                          <Download size={18} />
+                        </button>
+                        {printFacture && (
+                          <FacturePrintModal
+                            facture={printFacture}
+                            clientInfo={companyInfo}
+                            onClose={() => setPrintFacture(null)}
+                          />
+                        )}
+                        <button
+                          className={`${currentTheme.textSecondary} hover:text-red-600 transition-colors`}
+                          onClick={() => handleDelete(facture._id)}
+                        >
+                          <Trash2 size={18} />
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </div>
-        </div>
+        ) : (
+          <div className="flex items-center justify-center h-96 w-full">
+            <div className="text-center">
+              <FileText size={48} className="mx-auto mb-4 text-gray-400" />
+              <p className="text-gray-500 text-xl">Aucune facture trouvée</p>
+            </div>
+          </div>
+        )}
 
-        {/* Invoice Modal */}
-        {showModal && (
-          <div className="fixed inset-0 bg-black/30 backdrop-blur-md flex items-center justify-center p-4 z-50">
-            <div
-              className={`${currentTheme.card} rounded-xl p-8 max-w-lg w-full`}
-            >
-              <div className="flex items-center justify-between mb-6">
-                <h2 className={`text-2xl font-bold ${currentTheme.text}`}>
-                  {editingInvoice ? "Edit Invoice" : "Create New Invoice"}
-                </h2>
-                <button
-                  onClick={resetForm}
-                  className={`${currentTheme.textSecondary} hover:${currentTheme.text}`}
-                >
-                  <X size={24} />
-                </button>
-              </div>
+        {/* Payment Modal */}
+        {showPaymentModal && (
+          <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+            <div className="bg-white rounded-xl shadow-2xl max-w-md w-full p-6">
+              <h3 className="text-xl font-bold mb-4">
+                Enregistrer un paiement
+              </h3>
+              <p className="text-sm text-gray-600 mb-4">
+                Facture: <strong>{selectedFacture?.numero}</strong>
+              </p>
+              <p className="text-sm text-gray-600 mb-4">
+                Solde restant:{" "}
+                <strong className="text-red-600">
+                  {selectedFacture?.solde_a_payer?.toFixed(3)} TND
+                </strong>
+              </p>
+
               <div className="space-y-4">
                 <div>
-                  <label
-                    className={`block text-sm font-medium ${currentTheme.text} mb-2`}
+                  <label className="block text-sm font-medium mb-2">
+                    Montant
+                  </label>
+                  <input
+                    type="number"
+                    step="0.001"
+                    value={paymentAmount}
+                    onChange={(e) => setPaymentAmount(e.target.value)}
+                    className="w-full px-4 py-2 border rounded-lg"
+                    placeholder="0.000"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium mb-2">
+                    Mode de paiement
+                  </label>
+                  <select
+                    value={paymentMode}
+                    onChange={(e) => setPaymentMode(e.target.value)}
+                    className="w-full px-4 py-2 border rounded-lg"
                   >
-                    Client Name
+                    {PAYMENT_MODES.map((mode) => (
+                      <option key={mode.value} value={mode.value}>
+                        {mode.label}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium mb-2">
+                    Référence
                   </label>
                   <input
                     type="text"
-                    value={formData.clientName}
-                    onChange={(e) =>
-                      setFormData({ ...formData, clientName: e.target.value })
-                    }
-                    className={`w-full px-4 py-2 border ${currentTheme.border} rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${currentTheme.card} ${currentTheme.text}`}
-                    placeholder="e.g., John Doe"
+                    value={paymentReference}
+                    onChange={(e) => setPaymentReference(e.target.value)}
+                    className="w-full px-4 py-2 border rounded-lg"
+                    placeholder="N° chèque, virement..."
                   />
                 </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label
-                      className={`block text-sm font-medium ${currentTheme.text} mb-2`}
-                    >
-                      Amount ($)
-                    </label>
-                    <input
-                      type="number"
-                      step="0.01"
-                      value={formData.amount}
-                      onChange={(e) =>
-                        setFormData({ ...formData, amount: e.target.value })
-                      }
-                      className={`w-full px-4 py-2 border ${currentTheme.border} rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${currentTheme.card} ${currentTheme.text}`}
-                      placeholder="0.00"
-                    />
-                  </div>
-                  <div>
-                    <label
-                      className={`block text-sm font-medium ${currentTheme.text} mb-2`}
-                    >
-                      Due Date
-                    </label>
-                    <input
-                      type="date"
-                      value={formData.dueDate}
-                      onChange={(e) =>
-                        setFormData({ ...formData, dueDate: e.target.value })
-                      }
-                      className={`w-full px-4 py-2 border ${currentTheme.border} rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${currentTheme.card} ${currentTheme.text}`}
-                    />
-                  </div>
-                </div>
+
                 <div>
-                  <label
-                    className={`block text-sm font-medium ${currentTheme.text} mb-2`}
-                  >
-                    Status
+                  <label className="block text-sm font-medium mb-2">
+                    Notes
                   </label>
-                  <select
-                    value={formData.status}
-                    onChange={(e) =>
-                      setFormData({ ...formData, status: e.target.value })
-                    }
-                    className={`w-full px-4 py-2 border ${currentTheme.border} rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${currentTheme.card} ${currentTheme.text}`}
-                  >
-                    <option value="Pending">Pending</option>
-                    <option value="Paid">Paid</option>
-                    <option value="Overdue">Overdue</option>
-                  </select>
+                  <textarea
+                    value={paymentNotes}
+                    onChange={(e) => setPaymentNotes(e.target.value)}
+                    className="w-full px-4 py-2 border rounded-lg"
+                    rows={2}
+                    placeholder="Notes optionnelles..."
+                  />
                 </div>
-                <div className="flex gap-3 pt-4">
-                  <button
-                    onClick={handleSubmit}
-                    className={`flex-1 px-6 py-3 ${currentTheme.primary} text-white rounded-lg font-medium transition-all hover:shadow-lg`}
-                  >
-                    {editingInvoice ? "Update Invoice" : "Create Invoice"}
-                  </button>
-                  <button
-                    onClick={resetForm}
-                    className={`px-6 py-3 border ${currentTheme.border} ${currentTheme.text} rounded-lg font-medium ${currentTheme.hover} transition-colors`}
-                  >
-                    Cancel
-                  </button>
-                </div>
+              </div>
+
+              <div className="flex gap-3 mt-6">
+                <button
+                  onClick={submitPayment}
+                  className="flex-1 bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-medium"
+                >
+                  Enregistrer
+                </button>
+                <button
+                  onClick={() => setShowPaymentModal(false)}
+                  className="px-4 py-2 border rounded-lg hover:bg-gray-50"
+                >
+                  Annuler
+                </button>
               </div>
             </div>
           </div>
@@ -487,4 +520,4 @@ const invoices = () => {
   );
 };
 
-export default invoices;
+export default Factures;
