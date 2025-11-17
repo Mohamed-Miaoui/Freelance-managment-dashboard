@@ -22,6 +22,9 @@ import axios from "axios";
 const clients = () => {
   const [theme, setTheme] = useState("light");
   const [clients, setClients] = useState([]);
+  const [projects, setProjects] = useState([]);
+  const [totalRevenue, setTotalRevenue] = useState(0);
+  const [pendingRevenue, setPendingRevenue] = useState(0);
   const [showModal, setShowModal] = useState(false);
   const [editingClient, setEditingClient] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
@@ -34,9 +37,50 @@ const clients = () => {
       console.log(error);
     }
   };
+  const fetchProjects = async () => {
+    try {
+      const response = await axios.get("/api/project");
+      setProjects(response.data);
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
+  const fetchClientStats = async () => {
+    try {
+      const response = await axios.get("/api/facture");
+      const factures = response.data;
+
+      // Total revenue = All payments received (including acomptes)
+      const revenue = factures.reduce((sum, facture) => {
+        const facturePayments =
+          facture.paiements?.reduce(
+            (paymentSum, paiement) => paymentSum + paiement.montant,
+            0
+          ) || 0;
+
+        const acompte = facture.acompte || 0;
+
+        return sum + facturePayments + acompte;
+      }, 0);
+
+      // Pending revenue = All outstanding balances (solde_a_payer)
+      const pending = factures
+        .filter((f) => f.statut !== "payee")
+        .reduce((sum, facture) => sum + (facture.solde_a_payer || 0), 0);
+
+      setTotalRevenue(revenue);
+      setPendingRevenue(pending);
+    } catch (error) {
+      console.log(error);
+    }
+  };
 
   useEffect(() => {
     fetchClients();
+    fetchProjects();
+
+    fetchClientStats();
   }, []);
 
   const handleSubmitClient = async (values) => {
@@ -172,23 +216,21 @@ const clients = () => {
       color: "text-blue-600",
     },
     {
-      label: "Active Clients",
+      label: "Clients Actifs",
       value: clients.filter((c) => c.status === "active").length,
       icon: CheckCircle,
       color: "text-green-600",
     },
     {
-      label: "Total Projects",
-      value: clients.reduce((sum, c) => sum + c.projects, 0),
-      icon: Briefcase,
-      color: "text-purple-600",
+      label: "Revenu Total",
+      value: `${totalRevenue.toFixed(3)} TND`,
+      icon: DollarSign,
+      color: "text-green-600",
     },
     {
-      label: "Total Revenue",
-      value: `$${clients
-        .reduce((sum, c) => sum + c.totalSpent, 0)
-        .toLocaleString()}`,
-      icon: DollarSign,
+      label: "À Recevoir",
+      value: `${pendingRevenue.toFixed(3)} TND`,
+      icon: Clock,
       color: "text-orange-600",
     },
   ];

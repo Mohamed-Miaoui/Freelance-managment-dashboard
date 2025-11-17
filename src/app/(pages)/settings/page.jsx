@@ -1,21 +1,12 @@
 "use client";
-import React, { useState } from "react";
-import { User, Palette, FileText, Building, Save } from "lucide-react";
+import React, { useEffect, useState } from "react";
+import { User, Save } from "lucide-react";
+import { useFormik } from "formik";
+import axios from "axios";
 
 const settings = () => {
   const [theme, setTheme] = useState("light");
-  const [settingsData, setSettingsData] = useState({
-    profile: {
-      name: "Freelancer Name",
-      email: "freelancer@example.com",
-      company: "My Freelance Co.",
-    },
-    invoice: {
-      currency: "USD",
-      taxRate: 8.5,
-      companyAddress: "123 Freelance St.\nYour City, YS 12345",
-    },
-  });
+  const [isLoading, setIsLoading] = useState(true);
 
   const themes = {
     light: {
@@ -40,114 +31,288 @@ const settings = () => {
 
   const currentTheme = themes[theme];
 
-  const handleInputChange = (section, field, value) => {
-    setSettingsData((prev) => ({
-      ...prev,
-      [section]: {
-        ...prev[section],
-        [field]: value,
-      },
-    }));
-  };
+  const { values, errors, handleChange, handleSubmit, setValues } = useFormik({
+    initialValues: {
+      nom_complet: "",
+      matricule_fiscal: "",
+      adresse: "",
+      telephone: "",
+      email: "",
+      rib: "",
+      conditions_generales: "",
+      logo_path: "",
+      tva_assujetti: false,
+      taux_tva: 0,
+    },
+    onSubmit: async (values) => {
+      try {
+        console.log("Form data", values);
+        const settingsData = {
+          ...values,
+          updated_at: new Date().toISOString(),
+        };
 
-  const handleSave = () => {
-    // Here you would typically send the data to a server
-    console.log("Saving settings:", settingsData);
-    alert("Settings saved successfully!");
-  };
+        const response = await axios.put("/api/parametere", settingsData);
+        if (response) {
+          alert("Settings saved successfully!");
+        }
+      } catch (error) {
+        console.error("Error saving settings:", error);
+        alert("Error saving settings!");
+      }
+    },
+  });
 
-  const FormSection = ({ icon: Icon, title, children }) => (
-    <div className={`${currentTheme.card} rounded-xl shadow-sm border ${currentTheme.border} mb-8`}>
-      <div className="p-6 border-b ${currentTheme.border}">
-        <div className="flex items-center gap-3">
-          <Icon className={currentTheme.textSecondary} size={20} />
-          <h3 className={`text-lg font-semibold ${currentTheme.text}`}>{title}</h3>
-        </div>
+  useEffect(() => {
+    const fetchSettings = async () => {
+      try {
+        setIsLoading(true);
+        const response = await axios.get("/api/parametere");
+        console.log("Settings data:", response.data);
+
+        // Update Formik values with fetched data
+        setValues({
+          nom_complet: response.data.nom_complet || "",
+          matricule_fiscal: response.data.matricule_fiscal || "",
+          adresse: response.data.adresse || "",
+          telephone: response.data.telephone || "",
+          email: response.data.email || "",
+          rib: response.data.rib || "",
+          conditions_generales: response.data.conditions_generales || "",
+          logo_path: response.data.logo_path || "",
+          tva_assujetti: response.data.tva_assujetti || false,
+          taux_tva: response.data.taux_tva || 0,
+        });
+      } catch (error) {
+        console.error("Error fetching settings:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchSettings();
+  }, []); // Empty dependency array - only run once on mount
+
+  if (isLoading) {
+    return (
+      <div
+        className={`min-h-screen ${currentTheme.bg} flex items-center justify-center`}
+      >
+        <div className={`text-xl ${currentTheme.text}`}>Loading...</div>
       </div>
-      <div className="p-6 space-y-4">{children}</div>
-    </div>
-  );
-
-  const InputField = ({ label, id, value, onChange, type = "text", placeholder }) => (
-    <div>
-      <label htmlFor={id} className={`block text-sm font-medium ${currentTheme.text} mb-2`}>{label}</label>
-      <input
-        id={id}
-        type={type}
-        value={value}
-        onChange={onChange}
-        placeholder={placeholder}
-        className={`w-full px-4 py-2 border ${currentTheme.border} rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${currentTheme.card} ${currentTheme.text}`}
-      />
-    </div>
-  );
+    );
+  }
 
   return (
-    <div className={`min-h-screen ${currentTheme.bg} transition-colors duration-300`}>
+    <div
+      className={`min-h-screen ${currentTheme.bg} transition-colors duration-300`}
+    >
       <div className="ml-64 p-8">
-        <h1 className={`text-3xl font-bold ${currentTheme.text} mb-8`}>Settings</h1>
+        <h1 className={`text-3xl font-bold ${currentTheme.text} mb-8`}>
+          Settings
+        </h1>
 
-        <FormSection icon={User} title="Profile">
-          <InputField
-            label="Full Name"
-            id="name"
-            value={settingsData.profile.name}
-            onChange={(e) => handleInputChange("profile", "name", e.target.value)}
-          />
-          <InputField
-            label="Email Address"
-            id="email"
-            type="email"
-            value={settingsData.profile.email}
-            onChange={(e) => handleInputChange("profile", "email", e.target.value)}
-          />
-          <InputField
+        <form className="px-20" icon={User} title="Profile">
+          <div className="space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label
+                  className={`block text-sm font-medium ${currentTheme.text} mb-2`}
+                >
+                  nom_complet
+                </label>
+                <input
+                  label="nom_complet"
+                  name="nom_complet"
+                  value={values.nom_complet}
+                  onChange={handleChange}
+                  className={`w-full px-4 py-2 border ${currentTheme.border} rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${currentTheme.card} ${currentTheme.text}`}
+                  placeholder="john doe"
+                />
+              </div>
+              <div>
+                <label
+                  className={`block text-sm font-medium ${currentTheme.text} mb-2`}
+                >
+                  email
+                </label>
+                <input
+                  label="Email Address"
+                  name="email"
+                  type="email"
+                  value={values.email}
+                  onChange={handleChange}
+                  className={`w-full px-4 py-2 border ${currentTheme.border} rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${currentTheme.card} ${currentTheme.text}`}
+                  placeholder="email@example.com"
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label
+                  className={`block text-sm font-medium ${currentTheme.text} mb-2`}
+                >
+                  telephone
+                </label>
+                <input
+                  label="telephone"
+                  name="telephone"
+                  type="number"
+                  value={values.telephone}
+                  onChange={handleChange}
+                  className={`w-full px-4 py-2 border ${currentTheme.border} rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${currentTheme.card} ${currentTheme.text}`}
+                  placeholder="96555452"
+                />
+              </div>
+              <div>
+                <label
+                  className={`block text-sm font-medium ${currentTheme.text} mb-2`}
+                >
+                  adresse
+                </label>
+                <input
+                  label="adresse"
+                  name="adresse"
+                  value={values.adresse}
+                  onChange={handleChange}
+                  className={`w-full px-4 py-2 border ${currentTheme.border} rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${currentTheme.card} ${currentTheme.text}`}
+                  placeholder="25 rue abd elkader"
+                />
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label
+                  className={`block text-sm font-medium ${currentTheme.text} mb-2`}
+                >
+                  matricule_fiscal
+                </label>
+                <input
+                  label="matricule_fiscal"
+                  name="matricule_fiscal"
+                  value={values.matricule_fiscal}
+                  onChange={handleChange}
+                  className={`w-full px-4 py-2 border ${currentTheme.border} rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${currentTheme.card} ${currentTheme.text}`}
+                  placeholder="e.g., 123456789"
+                />
+              </div>
+              <div>
+                <label
+                  className={`block text-sm font-medium ${currentTheme.text} mb-2`}
+                >
+                  RIB
+                </label>
+                <input
+                  label="RIB Bancaire"
+                  name="rib"
+                  value={values.rib}
+                  onChange={handleChange}
+                  className={`w-full px-4 py-2 border ${currentTheme.border} rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${currentTheme.card} ${currentTheme.text}`}
+                  placeholder="e.g., 1234 5678 9012 3456"
+                />
+              </div>
+            </div>
+            {/* <input
             label="Company Name"
-            id="company"
+            name="company"
             value={settingsData.profile.company}
             onChange={(e) => handleInputChange("profile", "company", e.target.value)}
-          />
-        </FormSection>
+          /> */}
+            {/* <input
+            label="Company Name"
+            name="company"
+            value={settingsData.profile.company}
+            onChange={(e) => handleInputChange("profile", "company", e.target.value)}
+          /> */}
+          </div>
+        </form>
+        <div className="flex justify-end mt-10">
+          <button
+            onClick={handleSubmit}
+            className={`flex items-center gap-2 px-8 py-3 ${currentTheme.primary} text-white rounded-lg font-medium transition-all hover:shadow-lg`}
+          >
+            <Save size={18} />
+            Save Changes
+          </button>
+        </div>
 
-        <FormSection icon={Palette} title="Theme Customization">
+        {/* <FormSection icon={Palette} title="Theme Customization">
           <div>
-            <label className={`block text-sm font-medium ${currentTheme.text} mb-2`}>Select Theme</label>
+            <label
+              className={`block text-sm font-medium ${currentTheme.text} mb-2`}
+            >
+              Select Theme
+            </label>
             <div className="flex gap-3">
-              <button onClick={() => setTheme('light')} className={`px-6 py-2 rounded-lg font-medium ${theme === 'light' ? 'bg-blue-600 text-white' : `border ${currentTheme.border}`}`}>Light</button>
-              <button onClick={() => setTheme('dark')} className={`px-6 py-2 rounded-lg font-medium ${theme === 'dark' ? 'bg-blue-600 text-white' : `border ${currentTheme.border}`}`}>Dark</button>
+              <button
+                onClick={() => setTheme("light")}
+                className={`px-6 py-2 rounded-lg font-medium ${
+                  theme === "light"
+                    ? "bg-blue-600 text-white"
+                    : `border ${currentTheme.border}`
+                }`}
+              >
+                Light
+              </button>
+              <button
+                onClick={() => setTheme("dark")}
+                className={`px-6 py-2 rounded-lg font-medium ${
+                  theme === "dark"
+                    ? "bg-blue-600 text-white"
+                    : `border ${currentTheme.border}`
+                }`}
+              >
+                Dark
+              </button>
             </div>
           </div>
-        </FormSection>
+        </FormSection> */}
 
-        <FormSection icon={FileText} title="Invoice Settings">
+        {/* <FormSection icon={FileText} title="Invoice Settings">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <InputField
+            <input
               label="Currency"
-              id="currency"
+              name="currency"
               value={settingsData.invoice.currency}
-              onChange={(e) => handleInputChange("invoice", "currency", e.target.value)}
+              onChange={(e) =>
+                handleInputChange("invoice", "currency", e.target.value)
+              }
             />
-            <InputField
+            <input
               label="Tax Rate (%)"
-              id="taxRate"
+              name="taxRate"
               type="number"
               value={settingsData.invoice.taxRate}
-              onChange={(e) => handleInputChange("invoice", "taxRate", parseFloat(e.target.value))}
+              onChange={(e) =>
+                handleInputChange(
+                  "invoice",
+                  "taxRate",
+                  parseFloat(e.target.value)
+                )
+              }
             />
           </div>
           <div>
-            <label htmlFor="companyAddress" className={`block text-sm font-medium ${currentTheme.text} mb-2`}>Company Address (for Invoices)</label>
+            <label
+              htmlFor="companyAddress"
+              className={`block text-sm font-medium ${currentTheme.text} mb-2`}
+            >
+              Company Address (for Invoices)
+            </label>
             <textarea
-              id="companyAddress"
+              name="companyAddress"
               rows="4"
               value={settingsData.invoice.companyAddress}
-              onChange={(e) => handleInputChange("invoice", "companyAddress", e.target.value)}
+              onChange={(e) =>
+                handleInputChange("invoice", "companyAddress", e.target.value)
+              }
               className={`w-full px-4 py-2 border ${currentTheme.border} rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${currentTheme.card} ${currentTheme.text}`}
             ></textarea>
           </div>
-        </FormSection>
+        </FormSection> */}
 
-        <div className="flex justify-end">
+        {/* <div className="flex justify-end">
           <button
             onClick={handleSave}
             className={`flex items-center gap-2 px-8 py-3 ${currentTheme.primary} text-white rounded-lg font-medium transition-all hover:shadow-lg`}
@@ -155,7 +320,7 @@ const settings = () => {
             <Save size={18} />
             Save Changes
           </button>
-        </div>
+        </div> */}
       </div>
     </div>
   );

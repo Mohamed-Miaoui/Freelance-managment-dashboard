@@ -170,9 +170,17 @@ const Factures = () => {
     }
   };
 
-  const totalRevenu = factures
-    .filter((f) => f.statut === "payee")
-    .reduce((sum, f) => sum + f.montant_ttc, 0);
+  const totalRevenu = factures.reduce((sum, facture) => {
+    const facturePayments =
+      facture.paiements?.reduce(
+        (paymentSum, paiement) => paymentSum + paiement.montant,
+        0
+      ) || 0;
+
+    const acompte = facture.acompte || 0;
+
+    return sum + facturePayments + acompte;
+  }, 0);
 
   const totalEnAttente = factures
     .filter((f) => f.statut !== "payee")
