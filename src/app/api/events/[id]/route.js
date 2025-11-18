@@ -5,7 +5,7 @@ import { NextResponse } from "next/server";
 export async function PUT(req, { params }) {
   try {
     await dbConnect();
-    const { id } = params;
+    const { id } = await params;
     const body = await req.json();
 
     const event = await Event.findByIdAndUpdate(id, body, {
@@ -30,7 +30,7 @@ export async function PUT(req, { params }) {
 export async function DELETE(req, { params }) {
   try {
     await dbConnect();
-    const { id } = params;
+    const { id } = await params;
 
     const event = await Event.findByIdAndDelete(id);
 

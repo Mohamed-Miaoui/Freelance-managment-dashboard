@@ -128,7 +128,10 @@ const CalendarPage = () => {
   };
 
   const formatDate = (date) => {
-    return date.toISOString().split("T")[0];
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const day = String(date.getDate()).padStart(2, "0");
+    return `${year}-${month}-${day}`;
   };
 
   const getEventsForDate = (date) => {
@@ -163,7 +166,13 @@ const CalendarPage = () => {
 
   const handleDateClick = (date) => {
     setSelectedDate(date);
-    setNewEvent({ ...newEvent, date: formatDate(date) });
+    // Fix: Use local date string instead of ISO string
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const day = String(date.getDate()).padStart(2, "0");
+    const localDateString = `${year}-${month}-${day}`;
+
+    setNewEvent({ ...newEvent, date: localDateString });
     setShowEventModal(true);
   };
 
@@ -260,8 +269,14 @@ const CalendarPage = () => {
           </div>
           <button
             onClick={() => {
-              setSelectedDate(new Date());
-              setNewEvent({ ...newEvent, date: formatDate(new Date()) });
+              const today = new Date();
+              const year = today.getFullYear();
+              const month = String(today.getMonth() + 1).padStart(2, "0");
+              const day = String(today.getDate()).padStart(2, "0");
+              const todayString = `${year}-${month}-${day}`;
+
+              setSelectedDate(today);
+              setNewEvent({ ...newEvent, date: todayString });
               setShowEventModal(true);
             }}
             className="flex items-center gap-2 px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-all hover:shadow-lg"
