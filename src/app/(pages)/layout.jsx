@@ -12,6 +12,7 @@ import {
   FileArchive,
   CircleDollarSignIcon,
   Briefcase,
+  Calendar,
 } from "lucide-react";
 
 export default function Layout({ children }) {
@@ -50,6 +51,7 @@ export default function Layout({ children }) {
     { href: "/devis", icon: File, label: "Devis" },
     { href: "/invoices", icon: FileArchive, label: "Invoices" },
     { href: "/finance", icon: CircleDollarSignIcon, label: "Finance" },
+    { href: "/calendar", icon: Calendar, label: "Calendar" },
     { href: "/settings", icon: Settings, label: "Settings" },
   ];
 

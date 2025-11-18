@@ -1,5 +1,6 @@
 import dbConnect from "@/app/utils/dbConnect";
 import Project from "@/app/models/Project";
+import Devis from "@/app/models/Devis";
 import { NextResponse } from "next/server";
 
 
