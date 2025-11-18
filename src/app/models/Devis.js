@@ -15,7 +15,7 @@ const DevisSchema = new mongoose.Schema({
   statut: { type: String, enum: ['en_attente', 'accepte', 'refuse', 'expire'], default: 'en_attente' },
   montant_ht: { type: Number, required: true },
   tva: { type: Number, default: 0 },
-  timbre_fiscal: { type: Number, default: 0.600 },
+  timbre_fiscal: { type: Number, default: 0 },
   montant_ttc: { type: Number, required: true },
   montant_acompte: { type: Number, default: 0 },
   conditions_paiement: { type: String },

@@ -3,7 +3,7 @@ import { X, Download, Eye } from "lucide-react";
 import { PDFDownloadLink, PDFViewer } from "@react-pdf/renderer";
 import DevisPDF from "./DevisPDF";
 
-const DevisPrintModal = ({ devis, clientInfo, onClose }) => {
+const DevisPrintModal = ({ devis, clientInfo, settings, onClose }) => {
   const [showPreview, setShowPreview] = useState(false);
 
   return (
@@ -22,7 +22,13 @@ const DevisPrintModal = ({ devis, clientInfo, onClose }) => {
             </button>
 
             <PDFDownloadLink
-              document={<DevisPDF devis={devis} clientInfo={clientInfo} />}
+              document={
+                <DevisPDF
+                  devis={devis}
+                  clientInfo={clientInfo}
+                  settings={settings}
+                />
+              }
               fileName={`Devis-${devis.numero}.pdf`}
               className="flex items-center gap-2 px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors"
             >
@@ -51,7 +57,11 @@ const DevisPrintModal = ({ devis, clientInfo, onClose }) => {
               height="100%"
               className="border-0 min-h-[70vh]"
             >
-              <DevisPDF devis={devis} clientInfo={clientInfo} />
+              <DevisPDF
+                devis={devis}
+                clientInfo={clientInfo}
+                settings={settings}
+              />
             </PDFViewer>
           </div>
         )}

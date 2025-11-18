@@ -246,7 +246,7 @@ const styles = StyleSheet.create({
   },
 });
 
-const DevisPDF = ({ devis, clientInfo }) => {
+const DevisPDF = ({ devis, clientInfo, settings }) => {
   const formatDate = (dateString) => {
     return new Date(dateString).toLocaleDateString("fr-FR", {
       day: "2-digit",
@@ -268,15 +268,14 @@ const DevisPDF = ({ devis, clientInfo }) => {
         {/* Header */}
         <View style={styles.header}>
           <View>
-            <Text style={styles.companyName}>{clientInfo.nom}</Text>
-            <Text style={styles.companyDetail}>{clientInfo.adresse}</Text>
+            <Text style={styles.companyName}>{settings.nom_complet}</Text>
+            <Text style={styles.companyDetail}>{settings.adresse}</Text>
+            <Text style={styles.companyDetail}>Tél: {settings.telephone}</Text>
+            <Text style={styles.companyDetail}>Email: {settings.email}</Text>
             <Text style={styles.companyDetail}>
-              Tél: {clientInfo.telephone}
+              Matricule.F: {settings.matricule_fiscal}
             </Text>
-            <Text style={styles.companyDetail}>Email: {clientInfo.email}</Text>
-            <Text style={styles.companyDetail}>
-              M.F: {clientInfo.matricule_fiscal}
-            </Text>
+            <Text style={styles.companyDetail}>RIB: {settings.rib}</Text>
           </View>
 
           <View style={styles.devisBox}>
@@ -380,13 +379,13 @@ const DevisPDF = ({ devis, clientInfo }) => {
           </View>
         )}
 
-        {/* Notes */}
-        {devis.notes && (
-          <View style={styles.termsSection}>
-            <Text style={styles.termsTitle}>Informations Complémentaires</Text>
-            <Text style={styles.termsList}>{devis.notes}</Text>
-          </View>
-        )}
+        <View style={styles.termsSection}>
+          <Text style={styles.termsTitle}>Remarque:</Text>
+          <Text style={styles.termsList}>
+            Non assujetti à la TVA conformément à l’article 7 du décret-loi n°
+            2020-33 du 10 juin 2020 relatif au régime de l’auto-entrepreneur.
+          </Text>
+        </View>
 
         {/* Validity */}
         <View style={styles.validityBox}>

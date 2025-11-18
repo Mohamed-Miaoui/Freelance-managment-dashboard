@@ -24,7 +24,7 @@ const FactureSchema = new mongoose.Schema({
   statut: { type: String, enum: ['en_attente', 'payee', 'en_retard'], default: 'en_attente' },
   montant_ht: { type: Number, required: true },
   tva: { type: Number, default: 0 },
-  timbre_fiscal: { type: Number, default: 0.600 },
+  timbre_fiscal: { type: Number, default: 0 },
   montant_ttc: { type: Number, required: true },
   acompte: { type: Number, default: 0 },
   solde_a_payer: { type: Number },

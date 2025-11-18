@@ -3,7 +3,7 @@ import { X, Download, Eye } from "lucide-react";
 import { PDFDownloadLink, PDFViewer } from "@react-pdf/renderer";
 import FacturePDF from "./FacturePDF";
 
-const FacturePrintModal = ({ facture, clientInfo, onClose }) => {
+const FacturePrintModal = ({ facture, clientInfo, settings, onClose }) => {
   const [showPreview, setShowPreview] = useState(false);
 
   return (
@@ -23,7 +23,11 @@ const FacturePrintModal = ({ facture, clientInfo, onClose }) => {
 
             <PDFDownloadLink
               document={
-                <FacturePDF facture={facture} clientInfo={clientInfo} />
+                <FacturePDF
+                  facture={facture}
+                  clientInfo={clientInfo}
+                  settings={settings}
+                />
               }
               fileName={`Facture-${facture.numero}.pdf`}
               className="flex items-center gap-2 px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors"
@@ -53,7 +57,11 @@ const FacturePrintModal = ({ facture, clientInfo, onClose }) => {
               height="100%"
               className="border-0 min-h-[70vh]"
             >
-              <FacturePDF facture={facture} clientInfo={clientInfo} />
+              <FacturePDF
+                facture={facture}
+                clientInfo={clientInfo}
+                settings={settings}
+              />
             </PDFViewer>
           </div>
         )}

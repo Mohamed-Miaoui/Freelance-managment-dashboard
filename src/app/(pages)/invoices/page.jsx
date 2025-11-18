@@ -32,6 +32,7 @@ const Factures = () => {
   const [paymentReference, setPaymentReference] = useState("");
   const [paymentNotes, setPaymentNotes] = useState("");
   const [printFacture, setPrintFacture] = useState(null);
+  const [settings, setSettings] = useState({});
 
   const STATUS_OPTIONS = [
     { value: "en_attente", label: "En Attente" },
@@ -45,14 +46,18 @@ const Factures = () => {
     { value: "cheque", label: "Chèque" },
     { value: "autre", label: "Autre" },
   ];
-  const companyInfo = {
-    nom: "FreelancePro",
-    adresse: "123 Avenue de la Liberté, Tunis 1002, Tunisie",
-    telephone: "+216 71 234 567",
-    email: "contact@freelancepro.tn",
-    matricule_fiscal: "1234567/B/M/000",
+
+  // Fetch settings
+  const fetchSettings = async () => {
+    try {
+      const response = await axios.get("/api/parametere");
+      setSettings(response.data);
+    } catch (error) {
+      console.log(error);
+    }
   };
 
+  // Fetch factures from API
   const fetchFactures = async () => {
     try {
       const response = await axios.get("/api/facture");
@@ -75,6 +80,7 @@ const Factures = () => {
   };
 
   useEffect(() => {
+    fetchSettings();
     fetchFactures();
   }, []);
 
@@ -404,7 +410,8 @@ const Factures = () => {
                         {printFacture && (
                           <FacturePrintModal
                             facture={printFacture}
-                            clientInfo={companyInfo}
+                            clientInfo={printFacture.client_id}
+                            settings={settings}
                             onClose={() => setPrintFacture(null)}
                           />
                         )}

@@ -309,7 +309,7 @@ const styles = StyleSheet.create({
   },
 });
 
-const FacturePDF = ({ facture, clientInfo }) => {
+const FacturePDF = ({ facture, clientInfo, settings }) => {
   const formatDate = (dateString) => {
     return new Date(dateString).toLocaleDateString("fr-FR", {
       day: "2-digit",
@@ -352,15 +352,14 @@ const FacturePDF = ({ facture, clientInfo }) => {
         {/* Header */}
         <View style={styles.header}>
           <View style={styles.companyInfo}>
-            <Text style={styles.companyName}>{clientInfo.nom}</Text>
-            <Text style={styles.companyDetails}>{clientInfo.adresse}</Text>
+            <Text style={styles.companyName}>{settings.nom_complet}</Text>
+            <Text style={styles.companyDetails}>{settings.adresse}</Text>
+            <Text style={styles.companyDetails}>Tél: {settings.telephone}</Text>
+            <Text style={styles.companyDetails}>Email: {settings.email}</Text>
             <Text style={styles.companyDetails}>
-              Tél: {clientInfo.telephone}
+              M.F: {settings.matricule_fiscal}
             </Text>
-            <Text style={styles.companyDetails}>Email: {clientInfo.email}</Text>
-            <Text style={styles.companyDetails}>
-              M.F: {clientInfo.matricule_fiscal}
-            </Text>
+            <Text style={styles.companyDetails}>RIB: {settings.rib}</Text>
           </View>
 
           <View style={styles.factureSection}>
@@ -539,13 +538,15 @@ const FacturePDF = ({ facture, clientInfo }) => {
           </View>
         )}
 
-        {/* Notes - Only if exists and not empty */}
-        {showNotes && (
-          <View style={styles.infoBox}>
-            <Text style={styles.infoTitle}>Notes</Text>
-            <Text style={styles.infoText}>{facture.notes}</Text>
-          </View>
-        )}
+        {/* Notes tva exclusion */}
+
+        <View style={styles.infoBox}>
+          <Text style={styles.infoTitle}>Remarque:</Text>
+          <Text style={styles.infoText}>
+            Non assujetti à la TVA conformément à l’article 7 du décret-loi n°
+            2020-33 du 10 juin 2020 relatif au régime de l’auto-entrepreneur.
+          </Text>
+        </View>
 
         {/* Payment Notice - Only if unpaid */}
         {facture.solde_a_payer > 0 && (

@@ -26,6 +26,7 @@ const devis = () => {
 
   const [clients, setClients] = useState([]);
   const [devis, setDevis] = useState([]);
+  const [settings, setSettings] = useState({});
   const [theme, setTheme] = useState("light");
   const [showModal, setShowModal] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
@@ -81,7 +82,7 @@ const devis = () => {
   const recalculateTotals = (lignes) => {
     const montant_ht = lignes.reduce((sum, ligne) => sum + ligne.montant, 0);
     const tva_amount = (montant_ht * values.tva) / 100;
-    const timbre_fiscal = 0.6;
+    const timbre_fiscal = 0; //timbre fiscale and tax 0
     const montant_ttc = montant_ht + tva_amount + timbre_fiscal;
 
     formik.setFieldValue("montant_ht", montant_ht.toFixed(3));
@@ -102,6 +103,17 @@ const devis = () => {
 
       return updated;
     });
+  };
+
+  // Fetch settings
+  const fetchSettings = async () => {
+    try {
+      const response = await axios.get("/api/parametere");
+      setSettings(response.data);
+      console.log(response.data);
+    } catch (error) {
+      console.log(error);
+    }
   };
 
   //fetch clients
@@ -128,6 +140,7 @@ const devis = () => {
   useEffect(() => {
     fetchClients();
     fetchDevis();
+    fetchSettings();
   }, []);
 
   const handleSubmitDevis = async (values) => {
@@ -169,7 +182,7 @@ const devis = () => {
         statut: quote.statut,
         montant_ht: quote.montant_ht,
         tva: quote.tva,
-        timbre_fiscal: quote.timbre_fiscal || 0.6,
+        timbre_fiscal: quote.timbre_fiscal || 0, //timbre fiscale and tax 0
         montant_ttc: quote.montant_ttc,
         montant_acompte: quote.montant_acompte || 0,
         conditions_paiement: quote.conditions_paiement || "",
@@ -247,7 +260,7 @@ const devis = () => {
         statut: "en_attente",
         montant_ht: devis.montant_ht,
         tva: devis.tva,
-        timbre_fiscal: devis.timbre_fiscal || 0.6,
+        timbre_fiscal: devis.timbre_fiscal || 0, //timbre fiscale and tax 0
         montant_ttc: devis.montant_ttc,
         acompte: devis.montant_acompte || 0,
         conditions_paiement: devis.conditions_paiement || "",
@@ -994,7 +1007,7 @@ const devis = () => {
                                   <span
                                     className={`font-semibold ${currentTheme.text}`}
                                   >
-                                    0.600 TND
+                                    0.000 TND
                                   </span>
                                 </div>
                                 <div
@@ -1053,6 +1066,7 @@ const devis = () => {
         <DevisPrintModal
           devis={printDevis}
           clientInfo={printDevis.client_id}
+          settings={settings}
           onClose={() => setPrintDevis(null)}
         />
       )}
