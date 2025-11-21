@@ -11,20 +11,23 @@ import {
   Trash2,
   Download,
   CreditCard,
+  X,
 } from "lucide-react";
 import axios from "axios";
 import { useRouter, useSearchParams } from "next/navigation";
 import FacturePrintModal from "@/app/components/facture/FacturePrintModal";
+import { useFormik } from "formik";
 
 const Factures = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
   const highlightId = searchParams.get("highlight");
-
+  const [showModal, setShowModal] = useState(false);
   const [factures, setFactures] = useState([]);
   const [theme, setTheme] = useState("light");
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
+  const [typeFilter, setTypeFilter] = useState("all");
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [selectedFacture, setSelectedFacture] = useState(null);
   const [paymentAmount, setPaymentAmount] = useState("");
@@ -33,11 +36,23 @@ const Factures = () => {
   const [paymentNotes, setPaymentNotes] = useState("");
   const [printFacture, setPrintFacture] = useState(null);
   const [settings, setSettings] = useState({});
+  const [clients, setClients] = useState([]);
+  const [currentLine, setCurrentLine] = useState({
+    description: "",
+    montant: 0,
+  });
 
   const STATUS_OPTIONS = [
     { value: "en_attente", label: "En Attente" },
     { value: "payee", label: "Payée" },
     { value: "en_retard", label: "En Retard" },
+  ];
+  const TYPE_OPTIONS = [
+    { value: "projet", label: "Projet" },
+    { value: "maintenance", label: "Maintenance" },
+    { value: "hebergement", label: "Hébergement" },
+    { value: "ajout_fonction", label: "Ajout de fonctionnalités" },
+    { value: "abonnement", label: "Abonnement" },
   ];
 
   const PAYMENT_MODES = [
@@ -46,6 +61,41 @@ const Factures = () => {
     { value: "cheque", label: "Chèque" },
     { value: "autre", label: "Autre" },
   ];
+
+  //fetch clients
+  const fetchClients = async () => {
+    try {
+      const response = await axios.get("/api/client");
+      setClients(response.data);
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
+  // create facture
+  const handleSubmitFacture = async (values) => {
+    try {
+      // Generate invoice number
+      const year = new Date().getFullYear();
+      const response = await axios.get("/api/facture/count");
+      const count = response.data.count;
+      const factureNumero = `FAC-${year}-${String(count + 1).padStart(3, "0")}`;
+      values.numero = factureNumero;
+      const newFacture = await axios.post("/api/facture", values);
+      if (newFacture) {
+        setShowModal(false);
+        formik.resetForm();
+        fetchFactures();
+      }
+    } catch (error) {
+      console.log(error);
+    }
+  };
+  //close modal
+  const closeModal = () => {
+    setShowModal(false);
+    formik.resetForm();
+  };
 
   // Fetch settings
   const fetchSettings = async () => {
@@ -81,15 +131,77 @@ const Factures = () => {
 
   useEffect(() => {
     fetchSettings();
+    fetchClients();
     fetchFactures();
   }, []);
 
+  // Add a new line
+  const addLigne = () => {
+    if (!currentLine.description || currentLine.montant <= 0) {
+      alert("Please fill all line item fields");
+      return;
+    }
+
+    const newLigne = {
+      description: currentLine.description,
+
+      montant: Number(currentLine.montant),
+    };
+
+    formik.setFieldValue("lignes", [...values.lignes, newLigne]);
+
+    // Reset current line
+    setCurrentLine({
+      description: "",
+      montant: 0,
+    });
+
+    // Recalculate totals
+    recalculateTotals([...values.lignes, newLigne]);
+  };
+
+  // Remove a line
+  const removeLigne = (index) => {
+    const newLignes = values.lignes.filter((_, i) => i !== index);
+    formik.setFieldValue("lignes", newLignes);
+    recalculateTotals(newLignes);
+  };
+
+  // Recalculate totals based on line items
+  const recalculateTotals = (lignes) => {
+    const montant_ht = lignes.reduce((sum, ligne) => sum + ligne.montant, 0);
+    const tva_amount = (montant_ht * values.tva) / 100;
+    const timbre_fiscal = 0; //timbre fiscale and tax 0
+    const montant_ttc = montant_ht + tva_amount + timbre_fiscal;
+
+    formik.setFieldValue("montant_ht", montant_ht.toFixed(3));
+    formik.setFieldValue("montant_ttc", montant_ttc.toFixed(3));
+  };
+
+  // Handle current line changes
+  const handleLineChange = (e) => {
+    const { name, value } = e.target;
+    setCurrentLine((prev) => {
+      const updated = { ...prev, [name]: value };
+
+      // // Auto-calculate montant when quantite or prix_unitaire changes
+      // if (name === "quantite" || name === "prix_unitaire") {
+      //   updated.montant =
+      //     Number(updated.quantite) * Number(updated.prix_unitaire);
+      // }
+
+      return updated;
+    });
+  };
+
+  // handleAddPayment
   const handleAddPayment = (facture) => {
     setSelectedFacture(facture);
     setPaymentAmount(facture.solde_a_payer?.toString() || "");
     setShowPaymentModal(true);
   };
 
+  // handleAddPayment
   const submitPayment = async () => {
     if (!paymentAmount || parseFloat(paymentAmount) <= 0) {
       alert("Veuillez entrer un montant valide");
@@ -119,6 +231,7 @@ const Factures = () => {
     }
   };
 
+  // handleDelete
   const handleDelete = async (id) => {
     if (confirm("Êtes-vous sûr de vouloir supprimer ce facture?")) {
       try {
@@ -131,6 +244,39 @@ const Factures = () => {
       }
     }
   };
+
+  const formik = useFormik({
+    initialValues: {
+      client_id: "",
+      numero: "",
+      date_emission: "",
+      date_echeance: "",
+      statut: "",
+      montant_ht: "",
+      tva: "",
+      timbre_fiscal: "",
+      montant_ttc: "",
+      montant_acompte: "",
+      conditions_paiement: "",
+      notes: "",
+      type_prestation: "",
+      lignes: [],
+    },
+    // validationSchema: clientSchema,
+    onSubmit: (values) => {
+      handleSubmitFacture(values);
+    },
+  });
+  const {
+    values,
+    errors,
+    touched,
+    handleBlur,
+    handleChange,
+    handleSubmit,
+    validateForm,
+    resetForm,
+  } = formik;
 
   const themes = {
     light: {
@@ -160,7 +306,8 @@ const Factures = () => {
     }
 
     const matchesStatus = statusFilter === "all" || f.statut === statusFilter;
-    return matchesSearch && matchesStatus;
+    const typematch = typeFilter === "all" || f.type_prestation === typeFilter;
+    return matchesSearch && matchesStatus && typematch;
   });
 
   const getStatusColor = (status) => {
@@ -284,6 +431,25 @@ const Factures = () => {
                   </option>
                 ))}
               </select>
+              <select
+                value={typeFilter}
+                onChange={(e) => setTypeFilter(e.target.value)}
+                className={`px-4 py-2 border ${currentTheme.border} rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${currentTheme.card} ${currentTheme.text}`}
+              >
+                <option value="all">Tous les Types</option>
+                {TYPE_OPTIONS.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+              <button
+                className="flex p-2 px-4 font-extralight text-white border border-gray-700 bg-blue-600 rounded-lg "
+                onClick={() => setShowModal(true)}
+              >
+                <Plus></Plus>
+                Créer une facture
+              </button>
             </div>
           </div>
         </div>
@@ -348,6 +514,12 @@ const Factures = () => {
                         {facture.devis_id && (
                           <span className="ml-2 text-xs text-gray-500">
                             (Devis: {facture.devis_id.numero})
+                          </span>
+                        )}
+                        {!facture.devis_id && (
+                          <span className="ml-2 text-xs text-gray-500">
+                            (Devis direct:{" "}
+                            <strong>{facture.type_prestation}</strong>)
                           </span>
                         )}
                       </td>
@@ -531,6 +703,454 @@ const Factures = () => {
           </div>
         )}
       </div>
+
+      {showModal && (
+        <div className="fixed inset-0 bg-black/30 backdrop-blur-md flex items-center justify-center p-4 z-50">
+          <div
+            className={`${currentTheme.card} rounded-xl p-8 max-w-5xl w-full max-h-[90vh] flex flex-col`}
+          >
+            {/* Header - Fixed */}
+            <div className="flex items-center justify-between mb-6">
+              <h2 className={`text-2xl font-bold ${currentTheme.text}`}>
+                Créer une nouvelle facture
+              </h2>
+              <button
+                onClick={closeModal}
+                className={`${currentTheme.textSecondary} hover:${currentTheme.text}`}
+              >
+                <X size={24} />
+              </button>
+            </div>
+
+            {/* Scrollable Content */}
+            <div className="overflow-y-auto flex-1 pr-5">
+              {/* formik */}
+              <form onSubmit={handleSubmit}>
+                <div className="space-y-6">
+                  {/* select client */}
+                  <div>
+                    <label
+                      className={`block text-sm font-medium ${currentTheme.text} mb-2`}
+                    >
+                      select client
+                    </label>
+                    <select
+                      name="client_id"
+                      value={values.client_id}
+                      onChange={handleChange}
+                      className={`w-full px-4 py-2 border ${currentTheme.border} rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${currentTheme.card} ${currentTheme.text}`}
+                    >
+                      <option value="">-- Select a client --</option>
+                      {clients.map((client) => (
+                        <option key={client._id} value={client._id}>
+                          {client.nom}
+                        </option>
+                      ))}
+                    </select>
+                    {errors.client_id && (
+                      <p className="text-red-500">{errors.client_id}</p>
+                    )}
+                  </div>
+
+                  <div className="grid grid-cols-4 gap-4">
+                    <div>
+                      <label
+                        className={`block text-sm font-medium ${currentTheme.text} mb-2`}
+                      >
+                        Numero{" "}
+                        <span className="text-xs text-gray-500">
+                          (Auto-généré)
+                        </span>
+                      </label>
+                      <input
+                        name="numero"
+                        type="text"
+                        value={values.numero}
+                        readOnly
+                        className={`w-full px-4 py-2 border ${currentTheme.border} rounded-lg bg-gray-100 cursor-not-allowed ${currentTheme.text}`}
+                        placeholder="Auto-généré à la création"
+                      />
+                    </div>
+                    <div>
+                      <label
+                        className={`block text-sm font-medium ${currentTheme.text} mb-2`}
+                      >
+                        Date d'emission
+                      </label>
+                      <input
+                        name="date_emission"
+                        type="date"
+                        value={values.date_emission}
+                        onChange={handleChange}
+                        className={`w-full px-4 py-2 border ${currentTheme.border} rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${currentTheme.card} ${currentTheme.text}`}
+                      />
+                    </div>
+                    <div>
+                      <label
+                        className={`block text-sm font-medium ${currentTheme.text} mb-2`}
+                      >
+                        Date d'échéance
+                      </label>
+                      <input
+                        name="date_echeance"
+                        type="date"
+                        value={values.date_echeance}
+                        onChange={handleChange}
+                        className={`w-full px-4 py-2 border ${currentTheme.border} rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${currentTheme.card} ${currentTheme.text}`}
+                      />
+                    </div>
+                    <div>
+                      <label
+                        className={`block text-sm font-medium ${currentTheme.text} mb-2`}
+                      >
+                        Statut
+                      </label>
+                      <select
+                        name="statut"
+                        value={values.statut}
+                        onChange={handleChange}
+                        className={`w-full px-4 py-2 border ${currentTheme.border} rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${currentTheme.card} ${currentTheme.text}`}
+                      >
+                        <option value="">-- Sélectionner un statut --</option>
+                        {STATUS_OPTIONS.map((option) => (
+                          <option key={option.value} value={option.value}>
+                            {option.label}
+                          </option>
+                        ))}
+                      </select>
+                      {errors.statut && (
+                        <p className="text-red-500">{errors.statut}</p>
+                      )}
+                    </div>
+
+                    <div>
+                      <label
+                        className={`block text-sm font-medium ${currentTheme.text} mb-2`}
+                      >
+                        Type de prestation
+                      </label>
+                      <select
+                        name="type_prestation"
+                        value={values.type_prestation}
+                        onChange={handleChange}
+                        className={`w-full px-4 py-2 border ${currentTheme.border} rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${currentTheme.card} ${currentTheme.text}`}
+                      >
+                        <option value="">
+                          -- Sélectionner une prestation --
+                        </option>
+                        {TYPE_OPTIONS.map((option) => (
+                          <option key={option.value} value={option.value}>
+                            {option.label}
+                          </option>
+                        ))}
+                      </select>
+                      {errors.type_prestation && (
+                        <p className="text-red-500">{errors.type_prestation}</p>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-4 gap-4">
+                    <div>
+                      <label
+                        className={`block text-sm font-medium ${currentTheme.text} mb-2`}
+                      >
+                        montant-ht
+                      </label>
+                      <div className="relative">
+                        <input
+                          name="montant_ht"
+                          type="number"
+                          value={values.montant_ht}
+                          onChange={handleChange}
+                          className={`w-full px-4 py-2 pr-16 border ${currentTheme.border} rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${currentTheme.card} ${currentTheme.text}`}
+                          placeholder="800"
+                        />
+                        <span
+                          className={`absolute right-4 top-1/2 -translate-y-1/2 ${currentTheme.textSecondary} font-medium`}
+                        >
+                          TND
+                        </span>
+                      </div>
+                    </div>
+                    <div>
+                      <label
+                        className={`block text-sm font-medium ${currentTheme.text} mb-2`}
+                      >
+                        TVA
+                      </label>
+                      <div className="relative">
+                        <input
+                          name="tva"
+                          type="number"
+                          min={0}
+                          max={100}
+                          value={values.tva}
+                          onChange={handleChange}
+                          className={`w-full px-4 py-2 pr-16 border ${currentTheme.border} rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${currentTheme.card} ${currentTheme.text}`}
+                          placeholder="19"
+                        />
+                        <span
+                          className={`absolute right-4 top-1/2 -translate-y-1/2 ${currentTheme.textSecondary} font-medium`}
+                        >
+                          %
+                        </span>
+                      </div>
+                    </div>
+                    <div>
+                      <label
+                        className={`block text-sm font-medium ${currentTheme.text} mb-2`}
+                      >
+                        montant_ttc
+                      </label>
+                      <div className="relative">
+                        <input
+                          name="montant_ttc"
+                          type="number"
+                          value={values.montant_ttc}
+                          onChange={handleChange}
+                          className={`w-full px-4 py-2 pr-16 border ${currentTheme.border} rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${currentTheme.card} ${currentTheme.text}`}
+                          placeholder="1000"
+                        />
+                        <span
+                          className={`absolute right-4 top-1/2 -translate-y-1/2 ${currentTheme.textSecondary} font-medium`}
+                        >
+                          TND
+                        </span>
+                      </div>
+                    </div>
+                    <div>
+                      <label
+                        className={`block text-sm font-medium ${currentTheme.text} mb-2`}
+                      >
+                        montant_acompte
+                      </label>
+                      <div className="relative">
+                        <input
+                          name="montant_acompte"
+                          type="number"
+                          value={values.montant_acompte}
+                          onChange={handleChange}
+                          className={`w-full px-4 py-2 pr-16 border ${currentTheme.border} rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${currentTheme.card} ${currentTheme.text}`}
+                          placeholder="500"
+                        />
+                        <span
+                          className={`absolute right-4 top-1/2 -translate-y-1/2 ${currentTheme.textSecondary} font-medium`}
+                        >
+                          TND
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div>
+                    <label
+                      className={`block text-sm font-medium ${currentTheme.text} mb-2`}
+                    >
+                      Condition de paiement
+                    </label>
+                    <textarea
+                      name="conditions_paiement"
+                      value={values.conditions_paiement}
+                      onChange={handleChange}
+                      rows={4}
+                      className={`w-full px-4 py-2 border ${currentTheme.border} rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${currentTheme.card} ${currentTheme.text}`}
+                      placeholder="first u must pay 50% of the total amount"
+                    />
+                  </div>
+
+                  <div>
+                    <label
+                      className={`block text-sm font-medium ${currentTheme.text} mb-2`}
+                    >
+                      Notes
+                    </label>
+                    <textarea
+                      name="notes"
+                      value={values.notes}
+                      onChange={handleChange}
+                      rows={4}
+                      className={`w-full px-4 py-2 border ${currentTheme.border} rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${currentTheme.card} ${currentTheme.text}`}
+                      placeholder="Additional notes..."
+                    />
+                  </div>
+
+                  {/* Line Items Section----------------- */}
+                  <div
+                    className={`border ${currentTheme.border} rounded-lg p-4`}
+                  >
+                    <h3
+                      className={`text-lg font-semibold ${currentTheme.text} mb-4`}
+                    >
+                      Lignes de Facture
+                    </h3>
+
+                    {/* Add Line Form */}
+                    <div className="grid grid-cols-12 gap-3 mb-4">
+                      <div className="col-span-9">
+                        <label className="block text-sm font-medium mb-2">
+                          Description
+                        </label>
+                        <input
+                          type="text"
+                          name="description"
+                          value={currentLine.description}
+                          onChange={handleLineChange}
+                          className={`w-full px-3 py-2 border ${currentTheme.border} rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${currentTheme.card} ${currentTheme.text}`}
+                          placeholder="Développement page d'accueil"
+                        />
+                      </div>
+
+                      <div className="col-span-2">
+                        <label className="block text-sm font-medium mb-2">
+                          Montant
+                        </label>
+                        <input
+                          name="montant"
+                          type="number"
+                          value={currentLine.montant}
+                          onChange={handleLineChange}
+                          className={`w-full px-3 py-2 border ${currentTheme.border} rounded-lg  ${currentTheme.text}`}
+                          placeholder="Montant"
+                        />
+                      </div>
+                      <div className="col-span-1 self-end">
+                        <button
+                          type="button"
+                          onClick={addLigne}
+                          className={`w-full px-3 py-3 ${currentTheme.primary} text-white rounded-lg font-medium transition-all hover:shadow-lg`}
+                        >
+                          <Plus className="ml-2" size={20} />
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Lines List */}
+                    {values.lignes.length > 0 && (
+                      <div className="space-y-2">
+                        <div
+                          className={`grid grid-cols-12 gap-3 px-3 py-2 ${currentTheme.textSecondary} text-xs font-semibold uppercase`}
+                        >
+                          <div className="col-span-9">Description</div>
+                          <div className="col-span-2">Montant</div>
+                          <div className="col-span-1"></div>
+                        </div>
+                        {values.lignes.map((ligne, index) => (
+                          <div
+                            key={index}
+                            className={`grid grid-cols-12 gap-3 px-3 py-2 border ${currentTheme.border} rounded-lg ${currentTheme.hover}`}
+                          >
+                            <div className={`col-span-9 ${currentTheme.text}`}>
+                              {ligne.description}
+                            </div>
+
+                            <div
+                              className={`col-span-2 font-semibold ${currentTheme.text}`}
+                            >
+                              {ligne.montant.toFixed(3)} TND
+                            </div>
+                            <div className="col-span-1 flex justify-end">
+                              <button
+                                type="button"
+                                onClick={() => removeLigne(index)}
+                                className="text-red-600 hover:text-red-800 transition-colors"
+                              >
+                                <Trash2 size={16} />
+                              </button>
+                            </div>
+                          </div>
+                        ))}
+
+                        {/* Total Summary */}
+                        <div
+                          className={`mt-4 pt-4 border-t ${currentTheme.border}`}
+                        >
+                          <div className="flex justify-end space-y-2">
+                            <div className="w-64">
+                              <div className="flex justify-between py-1">
+                                <span className={currentTheme.textSecondary}>
+                                  Montant HT:
+                                </span>
+                                <span
+                                  className={`font-semibold ${currentTheme.text}`}
+                                >
+                                  {values.montant_ht} TND
+                                </span>
+                              </div>
+                              <div className="flex justify-between py-1">
+                                <span className={currentTheme.textSecondary}>
+                                  TVA ({values.tva}%):
+                                </span>
+                                <span
+                                  className={`font-semibold ${currentTheme.text}`}
+                                >
+                                  {(
+                                    (values.montant_ht * values.tva) /
+                                    100
+                                  ).toFixed(3)}{" "}
+                                  TND
+                                </span>
+                              </div>
+                              <div className="flex justify-between py-1">
+                                <span className={currentTheme.textSecondary}>
+                                  Timbre Fiscal:
+                                </span>
+                                <span
+                                  className={`font-semibold ${currentTheme.text}`}
+                                >
+                                  0.000 TND
+                                </span>
+                              </div>
+                              <div
+                                className={`flex justify-between py-2 border-t ${currentTheme.border} mt-2`}
+                              >
+                                <span
+                                  className={`font-bold ${currentTheme.text}`}
+                                >
+                                  Total TTC:
+                                </span>
+                                <span
+                                  className={`font-bold text-lg ${currentTheme.text}`}
+                                >
+                                  {values.montant_ttc} TND
+                                </span>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
+                    {values.lignes.length === 0 && (
+                      <div
+                        className={`text-center py-8 ${currentTheme.textSecondary}`}
+                      >
+                        Aucune ligne ajoutée. Ajoutez des lignes pour créer
+                        votre devis.
+                      </div>
+                    )}
+                  </div>
+                </div>
+                {/* Footer Buttons - Fixed */}
+                <div className="flex gap-3 pt-4 mt-4 border-t border-gray-200">
+                  <button
+                    type="submit"
+                    className={`flex-1 px-6 py-3 ${currentTheme.primary} text-white rounded-lg font-medium transition-all hover:shadow-lg`}
+                  >
+                    Créer Facture
+                  </button>
+                  <button
+                    onClick={closeModal}
+                    className={`px-6 py-3 border ${currentTheme.border} ${currentTheme.text} rounded-lg font-medium ${currentTheme.hover} transition-colors`}
+                  >
+                    Annuler
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

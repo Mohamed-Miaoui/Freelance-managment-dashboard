@@ -265,6 +265,7 @@ const devis = () => {
         acompte: devis.montant_acompte || 0,
         conditions_paiement: devis.conditions_paiement || "",
         notes: `Facture générée depuis le devis ${devis.numero}`,
+        type_prestation: devis.type_prestation,
         lignes: devis.lignes || [],
         paiements: [],
       };

@@ -32,6 +32,18 @@ const FactureSchema = new mongoose.Schema({
   notes: { type: String },
   lignes: [LigneSchema],
   paiements: [PaiementSchema],
+  type_prestation: {
+  type: String,
+  enum: [
+    'projet',          // Website build, web application, any one-time big project
+    'maintenance',     // Monthly or yearly maintenance
+    'hebergement',     // Hosting fee
+    'ajout_fonction',  // Adding new features after project delivery
+    'abonnement'       // Any recurring fee (SEO, support package, etc.)
+  ],
+  required: true,
+  default: 'projet'
+},
   created_at: { type: Date, default: Date.now }
 });
 

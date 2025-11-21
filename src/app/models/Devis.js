@@ -20,6 +20,19 @@ const DevisSchema = new mongoose.Schema({
   montant_acompte: { type: Number, default: 0 },
   conditions_paiement: { type: String },
   notes: { type: String },
+  type_prestation: {
+  type: String,
+  enum: [
+    'projet',          // Website build, web application, any one-time big project
+    'maintenance',     // Monthly or yearly maintenance
+    'hebergement',     // Hosting fee
+    'ajout_fonction',  // Adding new features after project delivery
+    'abonnement'       // Any recurring fee (SEO, support package, etc.)
+  ],
+  required: true,
+  default: 'projet'
+},
+
   lignes: [LigneSchema],
   created_at: { type: Date, default: Date.now }
 });
