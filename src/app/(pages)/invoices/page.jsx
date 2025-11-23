@@ -1,5 +1,5 @@
 "use client";
-import React, { useEffect, useState } from "react";
+import React, { Suspense, useEffect, useState } from "react";
 import {
   Plus,
   FileText,
@@ -14,12 +14,11 @@ import {
   X,
 } from "lucide-react";
 import axios from "axios";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import FacturePrintModal from "@/app/components/facture/FacturePrintModal";
 import { useFormik } from "formik";
 
-const Factures = () => {
-  const router = useRouter();
+const FacturesContent = () => {
   const searchParams = useSearchParams();
   const highlightId = searchParams.get("highlight");
   const [showModal, setShowModal] = useState(false);
@@ -1152,6 +1151,28 @@ const Factures = () => {
         </div>
       )}
     </div>
+  );
+};
+
+/**
+ * Wrapping in Suspense is required by Next.js for useSearchParams()
+ * to prevent build errors during static page generation.
+ * Shows a loading fallback while search params are resolved client-side.
+ */
+const Factures = () => {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+            <p className="text-gray-600">Chargement...</p>
+          </div>
+        </div>
+      }
+    >
+      <FacturesContent />
+    </Suspense>
   );
 };
 
