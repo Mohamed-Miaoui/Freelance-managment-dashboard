@@ -1,6 +1,6 @@
 "use client";
 import React, { useEffect, useState } from "react";
-import { User, Save } from "lucide-react";
+import { User, Save, Lock } from "lucide-react";
 import { useFormik } from "formik";
 import axios from "axios";
 
@@ -237,6 +237,13 @@ const settings = () => {
           </button>
         </div>
 
+        <div className="mt-12 pt-8 border-t border-gray-200 dark:border-gray-700">
+          <h2 className={`text-xl font-bold ${currentTheme.text} mb-6`}>
+            Security
+          </h2>
+          <ChangePasswordForm currentTheme={currentTheme} />
+        </div>
+
         {/* <FormSection icon={Palette} title="Theme Customization">
           <div>
             <label
@@ -323,6 +330,126 @@ const settings = () => {
         </div> */}
       </div>
     </div>
+  );
+};
+
+const ChangePasswordForm = ({ currentTheme }) => {
+  const [passwords, setPasswords] = useState({
+    currentPassword: "",
+    newPassword: "",
+    confirmPassword: "",
+  });
+  const [message, setMessage] = useState({ type: "", text: "" });
+  const [loading, setLoading] = useState(false);
+
+  const handleChange = (e) => {
+    setPasswords({ ...passwords, [e.target.name]: e.target.value });
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setMessage({ type: "", text: "" });
+
+    if (passwords.newPassword !== passwords.confirmPassword) {
+      setMessage({ type: "error", text: "New passwords do not match" });
+      return;
+    }
+
+    if (passwords.newPassword.length < 6) {
+      setMessage({ type: "error", text: "Password must be at least 6 characters" });
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const res = await fetch("/api/auth/change-password", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          currentPassword: passwords.currentPassword,
+          newPassword: passwords.newPassword,
+        }),
+      });
+
+      const data = await res.json();
+
+      if (res.ok) {
+        setMessage({ type: "success", text: "Password updated successfully" });
+        setPasswords({ currentPassword: "", newPassword: "", confirmPassword: "" });
+      } else {
+        setMessage({ type: "error", text: data.error || "Failed to update password" });
+      }
+    } catch (error) {
+      setMessage({ type: "error", text: "An error occurred" });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <form onSubmit={handleSubmit} className="max-w-md">
+      <div className="space-y-4">
+        <div>
+          <label className={`block text-sm font-medium ${currentTheme.text} mb-2`}>
+            Current Password
+          </label>
+          <input
+            type="password"
+            name="currentPassword"
+            value={passwords.currentPassword}
+            onChange={handleChange}
+            className={`w-full px-4 py-2 border ${currentTheme.border} rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${currentTheme.card} ${currentTheme.text}`}
+            required
+          />
+        </div>
+        <div>
+          <label className={`block text-sm font-medium ${currentTheme.text} mb-2`}>
+            New Password
+          </label>
+          <input
+            type="password"
+            name="newPassword"
+            value={passwords.newPassword}
+            onChange={handleChange}
+            className={`w-full px-4 py-2 border ${currentTheme.border} rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${currentTheme.card} ${currentTheme.text}`}
+            required
+          />
+        </div>
+        <div>
+          <label className={`block text-sm font-medium ${currentTheme.text} mb-2`}>
+            Confirm New Password
+          </label>
+          <input
+            type="password"
+            name="confirmPassword"
+            value={passwords.confirmPassword}
+            onChange={handleChange}
+            className={`w-full px-4 py-2 border ${currentTheme.border} rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${currentTheme.card} ${currentTheme.text}`}
+            required
+          />
+        </div>
+
+        {message.text && (
+          <div
+            className={`p-3 rounded-lg text-sm ${
+              message.type === "error"
+                ? "bg-red-50 text-red-600 dark:bg-red-900/30 dark:text-red-400"
+                : "bg-green-50 text-green-600 dark:bg-green-900/30 dark:text-green-400"
+            }`}
+          >
+            {message.text}
+          </div>
+        )}
+
+        <button
+          type="submit"
+          disabled={loading}
+          className={`px-6 py-2 ${currentTheme.primary} text-white rounded-lg font-medium transition-all disabled:opacity-50`}
+        >
+          {loading ? "Updating..." : "Update Password"}
+        </button>
+      </div>
+    </form>
   );
 };
 

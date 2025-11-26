@@ -13,6 +13,7 @@ import {
   CircleDollarSignIcon,
   Briefcase,
   Calendar,
+  LogOut,
 } from "lucide-react";
 
 export default function Layout({ children }) {
@@ -83,6 +84,17 @@ export default function Layout({ children }) {
                 <span>{link.label}</span>
               </Link>
             ))}
+            
+            <button
+              onClick={async () => {
+                await fetch("/api/auth/logout", { method: "POST" });
+                window.location.href = "/login";
+              }}
+              className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${currentTheme.text} ${currentTheme.hover} mt-8 text-red-500 hover:text-red-600 hover:bg-red-50`}
+            >
+              <LogOut strokeWidth={1} size={20} />
+              <span>Logout</span>
+            </button>
           </nav>
         </div>
       </div>

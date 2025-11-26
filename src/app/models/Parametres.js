@@ -11,10 +11,11 @@ const ParametresSchema = new mongoose.Schema({
   logo_path: { type: String },
   tva_assujetti: { type: Boolean, default: false },
   taux_tva: { type: Number, default: 19 },
+  password: { type: String },
   updated_at: { type: Date, default: Date.now }
 });
 
-ParametresSchema.statics.getSettings = async function() {
+ParametresSchema.statics.getSettings = async function () {
   let settings = await this.findOne();
   if (!settings) {
     settings = await this.create({ nom_complet: 'Miaoui Mohamed' });
